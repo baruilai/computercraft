@@ -653,7 +653,7 @@ local function checkItemName(slot)
 	end
 end
 
--- no user input requested
+-- inventory check, no user input requested
 local function checkInv(inventory_table)
 	local iterations = 0
 
