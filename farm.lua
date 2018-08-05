@@ -39,6 +39,25 @@ local error_notification = {
 	chest_down = 			"Chest down is full",
 }
 
+-- minimum item requirement for building a tree farm
+local building_req = {
+	quantity = {
+					[2] = 26, 	[3] = 30, 	[4] = 64, 
+		[5] = 64, 	[6] = 64, 	[7] = 64, 	[8] = 64, 
+		[9] = 37, 	[10] = 1, 	[11] = 1, 	[12] = 8, 
+		[13] = 17, 	[14] = 17, 	[15] = 17, 	[16] = 16
+		},
+
+	name = {},
+
+	description = {
+								[2] = "dirt", 			[3] = "torches", 		[4] = "building block", 
+		[5] = "building block", [6] = "building block", [7] = "building block", [8] = "building block", 
+		[9] = "building block", [10] = "waterbucket",	[11] = "waterbucket",	[12] = "block going down", 
+		[13] = "left block", 	[14] = "distant block", [15] = "right block", 	[16] = "close block"
+		}
+	}
+
 local function update()
 	--before we try to delete ourself, just check the connection OK?
 	test = http.get("http://pastebin.com/" .. pastebin_code)
@@ -599,7 +618,89 @@ local function makeWallsAround(width, depth, slot_1, slot_2, slot_3, slot_4)
 	turtle.turnLeft()
 end
 
+local function checkInventory(inventory_table)
+	local term_width, term_height = term.getSize()
+	local event, p1
+	local line_number = 0
+	local lines = 1
+
+	local req = 1
+
+	for key, value in pairs(inventory_table) do
+		line_number = line_number + 1
+	end
+
+	local function checkSlot(slot)
+		if inventory_table.quantity[slot] == nil then
+				return true
+		elseif turtle.getItemCount(slot) < inventory_table.quantity[slot] then
+				return false
+		elseif checkItemName(slot) ~= inventory_table.name[slot] and inventory_table.name[slot] ~= nil then
+				return false
+		end
+
+		return true
+	end
+
+	while req <= 16 do
+		req = 1
+		lines = 1
+
+		term.clear()
+		term.setCursorPos(1, 1)
+
+		print("Please insert following items into their slots")
+		term.setCursorPos(2, 4)
+		term.write("Item")
+		term.setCursorPos(30, 4)
+		term.write("Slot")
+
+		for i = 1, 16 do
+			if not checkSlot(i) then
+
+					term.setCursorPos(2, lines + 5)
+					term.write(inventory_table.quantity[i])
+
+					term.setCursorPos(5, lines + 5)
+					term.write(inventory_table.description[i])
+
+					term.setCursorPos(32, lines + 5)
+					term.write(i)
+					lines = lines + 1
+			else 
+				req = req + 1
+			end
+		end
+
+		term.setCursorPos(1, term_height)
+		term.write(string.rep(" ", term_width))
+		term.setCursorPos(1, term_height)
+		term.write("Press q to quit")
+
+		if req <= 16 then 
+			local event, p1 = os.pullEvent()
+			if event == "key" and p1 == 16 then
+				term.clear()
+				term.setCursorPos(1, 1)
+				return false
+			end
+		end
+	end
+	term.clear()
+	term.setCursorPos(1, 1)
+	return true
+end
+
 local function makeFarm(width, depth)
+	if fuelTooLow() then
+		message = "fuel"
+		return false
+	end
+
+	if not checkInventory(building_req) then
+		return false
+	end
+
 	turtle.select(12)
 	moveForward()
 	laySurface(farm_width, farm_depth, "down", true)
