@@ -1,4 +1,5 @@
 -- Woody - program for pesistent wood farming
+-- version 3 for Minecraft 1.8.9
 
 -- you can edit these variables
 local sleep_on_startup = 3 			--seconds, to prevent lagging caused by too many computer starting
