@@ -1,15 +1,15 @@
 --installer v0.1
 
-local program_list = {
-	require.URL = "https://raw.githubusercontent.com/baruilai/Computercraft/master/api/require.lua";
-	require.name = "require";
-	test.URL = "https://raw.githubusercontent.com/baruilai/Computercraft/master/test.lua";
-	test.name = "test";
-	move.URL = "https://raw.githubusercontent.com/baruilai/Computercraft/master/api/move";
-	move.name = "move";
-}
+require = {}
+require.URL = "https://raw.githubusercontent.com/baruilai/Computercraft/master/api/require.lua"
+require.name = "require"
+test = {}
+test.URL = "https://raw.githubusercontent.com/baruilai/Computercraft/master/test.lua"
+test.name = "test"
 
-require_URL = "https://raw.githubusercontent.com/baruilai/Computercraft/master/api/require.lua"
+move = {}
+move.URL = "https://raw.githubusercontent.com/baruilai/Computercraft/master/api/move"
+move.name = "move"
 
 local function gitGet(git_URL, file_name)
 	if http.checkURL(git_URL) then
