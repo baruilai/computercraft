@@ -25,7 +25,7 @@ function require(...)
     return unpack(r)
 end
 
-require(move)
+require("move")
 
 move.forward(5)
 move.up(2)
