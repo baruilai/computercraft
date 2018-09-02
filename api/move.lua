@@ -1,10 +1,12 @@
 -- more advanced moving functions
 -- mob protection is obsolete since CC 1.76, turtle will move entities 
 
-local max_effort = 100 -- turtle will try to move this many times and then trow an error
-local action_delay = 0.2 -- delay so turtle will not attack or dig too fast
+local move = {}
 
-local function forward(distance)
+local move.max_effort = 100 -- turtle will try to move this many times and then trow an error
+local move.action_delay = 0.2 -- delay so turtle will not attack or dig too fast
+
+local function move.forward(distance)
 	distance = distance or 1
 
 	for i = 1, distance do
@@ -32,7 +34,7 @@ local function forward(distance)
 	return true
 end
 
-local function up(distance)
+local function move.up(distance)
 	distance = distance or 1
  
 	for i = 1, up do
@@ -61,9 +63,8 @@ local function up(distance)
 	return true
 end
  
-local function down(distance)
+local function move.down(distance)
 	distance = distance or 1
-
 
 	for i = 1, down do
 		local tries = 0
@@ -90,8 +91,8 @@ local function down(distance)
 	end
 	return true
 end
- 
-local function back(distance)
+
+local function move.back(distance)
 	distance = distance or 1
 
 	for i = 1, back do
@@ -119,3 +120,5 @@ local function back(distance)
 	end
 	return true
 end
+
+return move
