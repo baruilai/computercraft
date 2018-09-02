@@ -3,10 +3,10 @@
 
 local move = {}
 
-local move.max_effort = 100 -- turtle will try to move this many times and then trow an error
-local move.action_delay = 0.2 -- delay so turtle will not attack or dig too fast
+move.max_effort = 100 -- turtle will try to move this many times and then trow an error
+move.action_delay = 0.2 -- delay so turtle will not attack or dig too fast
 
-local function move.forward(distance)
+function move.forward(distance)
 	distance = distance or 1
 
 	for i = 1, distance do
@@ -34,10 +34,10 @@ local function move.forward(distance)
 	return true
 end
 
-local function move.up(distance)
+function move.up(distance)
 	distance = distance or 1
  
-	for i = 1, up do
+	for i = 1, distance do
 		local tries = 0
 
 		if turtle.detectUp() then 
@@ -63,10 +63,10 @@ local function move.up(distance)
 	return true
 end
  
-local function move.down(distance)
+function move.down(distance)
 	distance = distance or 1
 
-	for i = 1, down do
+	for i = 1, distance do
 		local tries = 0
 
 		if turtle.detectDown() then 
@@ -92,10 +92,10 @@ local function move.down(distance)
 	return true
 end
 
-local function move.back(distance)
+function move.back(distance)
 	distance = distance or 1
 
-	for i = 1, back do
+	for i = 1, distance do
 		local tries = 0
 
 		--mob and sand/gravel protection
