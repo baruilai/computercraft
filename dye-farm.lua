@@ -1,4 +1,4 @@
-Dye farming
+--Dye farming
 
 local function unload()
     for i = 1, 16 do

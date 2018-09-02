@@ -1,4 +1,4 @@
--- four important moving functions
+-- more advanced moving functions
 -- mob protection is obsolete since CC 1.76, turtle will move entities 
 
 local max_effort = 100 -- turtle will try to move this many times and then trow an error
