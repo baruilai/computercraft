@@ -2,6 +2,7 @@
 -- A nice, small class implementation.
 -- http://www.computercraft.info/forums2/index.php?/topic/12518-a-nice-small-class-implementation/
 
+local entity = {}
 function class(obj)
 	obj = obj or {}
 	obj.init = obj.init or function() end
@@ -23,6 +24,8 @@ function class(obj)
 	
 	return setmetatable(obj, {__call = obj.new})
 end
+
+return entity
 
 --[[ Usage example:
 

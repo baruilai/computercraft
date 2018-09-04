@@ -1,12 +1,10 @@
--- more advanced moving functions
--- mob protection is obsolete since CC 1.76, turtle will move entities instead of attacking
+local class = require("class")
+local solid_turtle = class.class()
 
-local move = {}
+solid_turtle.max_effort = 100 -- turtle will try to move this many times and then trow an error
+solid_turtle.action_delay = 0.2 -- delay so turtle will not attack or dig too fast, used to prevent error: "Too long without yielding"
 
-move.max_effort = 100 -- turtle will try to move this many times and then trow an error
-move.action_delay = 0.2 -- delay so turtle will not attack or dig too fast
-
-function move.forward(distance)
+function solid_turtle:forward(distance)
 	distance = distance or 1
 
 	for i = 1, distance do
@@ -22,11 +20,11 @@ function move.forward(distance)
 			else
 				turtle.attack()
 			end
-			sleep(action_delay)
+			sleep(self.action_delay)
 			tries = tries + 1
-			if tries > max_effort then
-				print("Error: can't move.")
-				error_notification = "Error: can't move."
+			if tries > self.max_effort then
+				print("Error: can't move:")
+				error_notification = "Error: can't move:"
 				return false
 			end
 		end
@@ -34,7 +32,7 @@ function move.forward(distance)
 	return true
 end
 
-function move.up(distance)
+function solid_turtle:up(distance)
 	distance = distance or 1
  
 	for i = 1, distance do
@@ -51,11 +49,11 @@ function move.up(distance)
 			else
 				turtle.attackUp()
 			end
-			sleep(action_delay)
+			sleep(self.action_delay)
 			tries = tries + 1
-			if tries > max_effort then
-				print("Error: can't move.")
-				error_notification = "Error: can't move."
+			if tries > self.max_effort then
+				print("Error: can't move:")
+				error_notification = "Error: can't move:"
 				return false
 			end
 		end
@@ -63,7 +61,7 @@ function move.up(distance)
 	return true
 end
  
-function move.down(distance)
+function solid_turtle:down(distance)
 	distance = distance or 1
 
 	for i = 1, distance do
@@ -80,11 +78,11 @@ function move.down(distance)
 			else
 				turtle.attackDown()
 			end
-			sleep(action_delay)
+			sleep(self.action_delay)
 			tries = tries + 1
-			if tries > max_effort then
-				print("Error: can't move.")
-				error_notification = "Error: can't move."
+			if tries > self.max_effort then
+				print("Error: can't move:")
+				error_notification = "Error: can't move:"
 				return false
 			end
 		end
@@ -92,7 +90,7 @@ function move.down(distance)
 	return true
 end
 
-function move.back(distance)
+function solid_turtle:back(distance)
 	distance = distance or 1
 
 	for i = 1, distance do
@@ -111,9 +109,9 @@ function move.back(distance)
 			turtle.turnLeft()
 			turtle.turnLeft()
 			tries = tries + 1
-			if tries > max_effort then
-				print("Error: can't move.")
-				error_notification = "Error: can't move."
+			if tries > self.max_effort then
+				print("Error: can't move:")
+				error_notification = "Error: can't move:"
 				return false
 			end
 		end
@@ -121,4 +119,4 @@ function move.back(distance)
 	return true
 end
 
-return move
+return solid_turtle

@@ -1,19 +1,41 @@
--- require() for CC by comp500
--- MIT license - https://github.com/comp500/CCSnippets/
-function require(...)
-    local c,r = fs.combine,{}
-    local function fn(a) return fs.exists(a) and a or false end
-    for i,v in ipairs(arg) do
-        local file = fn(c('usr/apis',v)) or fn(v) or shell.resolveProgram(v)
-        if not file then
-            printError("API "..v.." not found")
-            table.insert(r,nil)
-        else
-            os.loadAPI(file)
-            local b = _G[v]
-            _G[v] = nil
-            table.insert(r,b)
-        end
-    end
-    return unpack(r)
+-- require by Lignum
+-- http://www.computercraft.info/forums2/index.php?/topic/27746-efficiently-working-with-multiple-source-files/
+
+local require
+
+do
+	local requireCache = {}
+
+	require = function(file)
+				local absolute = shell.resolve(file)
+
+				if requireCache[absolute] ~= nil then
+					--# Lucky day, this file has already been loaded once!
+					--# Return its cached result.
+					return requireCache[absolute]
+				end
+
+				--# Create a custom environment so that loaded
+				--# source files also have access to require.
+				local env = {
+					require = require
+				}
+
+				setmetatable(env, { __index = _G, __newindex = _G })
+
+				--# Load the source file with loadfile, which
+				--# also allows us to pass our custom environment.
+				local chunk, err = loadfile(absolute, env)
+
+				--# If chunk is nil, then there was a syntax error
+				--# or the file does not exist.
+				if chunk == nil then
+					return error(err)
+				end
+
+				--# Execute the file, cache and return its return value.
+				local result = chunk()
+				requireCache[absolute] = result
+				return result
+	end
 end
