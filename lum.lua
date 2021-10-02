@@ -97,7 +97,7 @@ local building_req = {
 local game_item = {
 	chest = "minecraft:chest",
 	leaves = "minecraft:leaves",
-	torch = "minecraft:torch",
+	torch = "minecraft:wall_torch",
 	water = "minecraft:water"
 }
 
