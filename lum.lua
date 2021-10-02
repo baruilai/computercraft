@@ -135,8 +135,8 @@ local function createStartup()
 end
 
 -- you can cancel waiting countdown by this
-function cancelTimer(duration, text)
-	timer = os.startTimer(1)
+local function cancelTimer(duration, text)
+	local timer = os.startTimer(1)
 	repeat
 		term.clear()
 		term.setCursorPos(1, 1)
@@ -265,29 +265,6 @@ local function fuelTooLow()
 		return false
 	else
 		return true
-	end
-end
-
--- check name on block
-local function inspect(direction, requested_data)
-	local inspected, item
-
-	if direction == "front" then
-		inspected, item = turtle.inspect()
-	elseif direction == "down" then
-		inspected, item = turtle.inspectDown()
-	elseif direction == "up" then
-		inspected, item = turtle.inspectUp()
-	end
-
-	if inspected then
-		if requested_data == "name" then
-			return item.name
-		elseif requested_data == "metadata" then
-			return item.metadata
-		end
-	else
-		return false
 	end
 end
 
@@ -526,7 +503,7 @@ local function farmTrees()
 	local max_move = 250 -- not very effective attempt to prevent rogue turtles
 	while max_move > 1 do
 		turtle.select(slot.sapling)
-		while isFrontBlock(game_item.leaves) do
+		while not turtle.detect() or isFrontBlock(game_item.leaves) do
 			moveForward()
 			turtle.select(slot.sapling)
 			if turtle.getItemCount() > 1 then
