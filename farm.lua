@@ -618,6 +618,17 @@ local function makeWallsAround(width, depth, slot_1, slot_2, slot_3, slot_4)
 	turtle.turnLeft()
 end
 
+-- check for item name in inventory
+local function checkItemName(slot)
+	if slot == nil then slot = turtle.getSelectedSlot() end
+	item = turtle.getItemDetail(slot)
+	if item then
+		return item.name
+	else
+		return false
+	end
+end
+
 local function checkInventory(inventory_table)
 	local term_width, term_height = term.getSize()
 	local event, p1
@@ -958,17 +969,6 @@ end
 if args[1] == "loop" then
 	if not cancelTimer(sleep_on_startup, "Countdown to start") then
 		farmForever()
-	end
-end
-
--- check for item name in inventory
-local function checkItemName(slot)
-	if slot == nil then slot = turtle.getSelectedSlot() end
-	item = turtle.getItemDetail(slot)
-	if item then
-		return item.name
-	else
-		return false
 	end
 end
 
