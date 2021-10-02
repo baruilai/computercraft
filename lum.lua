@@ -503,7 +503,9 @@ local function farmTrees()
 	local max_move = 250 -- not very effective attempt to prevent rogue turtles
 	while max_move > 1 do
 		turtle.select(slot.sapling)
-		while not turtle.detect() or isFrontBlock(game_item.leaves) do
+		print(isFrontBlock(game_item.leaves))
+		print((not turtle.detect()) or (isFrontBlock(game_item.leaves)))
+		while (not turtle.detect()) or (isFrontBlock(game_item.leaves)) do
 			moveForward()
 			turtle.select(slot.sapling)
 			if turtle.getItemCount() > 1 then
