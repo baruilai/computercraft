@@ -291,6 +291,39 @@ local function inspect(direction, requested_data)
 	end
 end
 
+local function isFrontBlock(block)
+	local has_block, data = turtle.inspect()
+	if not has_block then
+		return false
+	end
+
+	if data.name == block or data[block] then
+		return true
+	end
+end
+
+local function isBottomBlock(block)
+	local has_block, data = turtle.inspectDown()
+	if not has_block then
+		return false
+	end
+
+	if data.name == block or data[block] then
+		return true
+	end
+end
+
+local function isTopBlock(block)
+	local has_block, data = turtle.inspectUp()
+	if not has_block then
+		return false
+	end
+
+	if data.name == block or data[block] then
+		return true
+	end
+end
+
 local function checkForEmptySlot()
 	-- if there is no material, select next slot
 	-- could use better name :-)
@@ -493,7 +526,7 @@ local function farmTrees()
 	local max_move = 250 -- not very effective attempt to prevent rogue turtles
 	while max_move > 1 do
 		turtle.select(slot.sapling)
-		while not turtle.detect() or inspect("front", "name") == game_item.leaves do
+		while isFrontBlock(game_item.leaves) do
 			moveForward()
 			turtle.select(slot.sapling)
 			if turtle.getItemCount() > 1 then
@@ -501,8 +534,8 @@ local function farmTrees()
 			end
 
 			--protection against rogue turtles
-			if inspect("down", "name") == game_item.chest then
-				while inspect("front", "name") ~= game_item.chest do
+			if isBottomBlock(game_item.chest) then
+				while not isFrontBlock(game_item.chest) do
 					turtle.turnLeft()
 				end
 				if starting_position == "left" then
@@ -528,14 +561,14 @@ local function farmTrees()
 			if wall_number == slot.front then
 				turtle.turnRight()
 
-				if inspect("front", "name") == game_item.leaves then
+				if isFrontBlock(game_item.leaves) then
 					turtle.dig()
 				end
 
 				local steps = 0
 				while not turtle.detect() and steps < 3 do
 					moveForward()
-					if inspect("front", "name") == game_item.leaves then
+					if isFrontBlock(game_item.leaves) then
 						turtle.dig()
 					end
 					steps = steps + 1
@@ -547,14 +580,14 @@ local function farmTrees()
 			elseif wall_number == slot.back then
 				--heading for opposite wall and then to start
 				turtle.turnLeft()
-				if inspect("front", "name") == game_item.leaves then
+				if isFrontBlock(game_item.leaves) then
 					turtle.dig()
 				end
 
 				local steps = 0
 				while not turtle.detect() and steps < 3 do
 					moveForward()
-					if inspect("front", "name") == game_item.leaves then
+					if isFrontBlock(game_item.leaves) then
 						turtle.dig()
 					end
 					steps = steps + 1
@@ -571,14 +604,14 @@ local function farmTrees()
 				--last wall before heading to start
 				turtle.select(slot.down)
 
-				if inspect("down", "name") == game_item.leaves then
+				if isBottomBlock(game_item.leaves) then
 					turtle.digDown()
 				end
 
 				local travelled = 0
-				while not turtle.compareDown() and inspect("down", "name") ~= game_item.water do
+				while not turtle.compareDown() and not isBottomBlock(game_item.water) do
 					moveDown()
-					if inspect("down", "name") == game_item.leaves then
+					if isBottomBlock(game_item.leaves) then
 						turtle.digDown()
 					end
 					travelled = travelled + 1
@@ -607,14 +640,14 @@ local function farmTrees()
 					turtle.turnRight()
 				end
 
-				if inspect("front", "name") == game_item.leaves then
+				if isFrontBlock(game_item.leaves) then
 					turtle.dig()
 				end
 
 				local steps = 0
 				while not turtle.detect() and steps < 3 do
 					moveForward()
-					if inspect("front", "name") == game_item.leaves then
+					if isFrontBlock(game_item.leaves) then
 						turtle.dig()
 					end
 					steps = steps + 1
@@ -636,7 +669,7 @@ local function farmTrees()
 					turtle.turnRight()
 				end
 
-				while not turtle.detect() or inspect("front", "name") == game_item.leaves do
+				while not turtle.detect() or isFrontBlock(game_item.leaves) do
 					moveForward()
 				end
 
@@ -658,7 +691,7 @@ local function farmTrees()
 				turtle.turnLeft()
 				turtle.turnLeft()
 
-				if inspect("down", "name") == game_item.chest then
+				if isBottomBlock(game_item.chest) then
 					return true
 				end
 			elseif wall_number == slot.cobblestone then
@@ -794,7 +827,7 @@ local function makeTreeFarm()
 		end
 
 		for i = 2, length do
-			if inspect("up", "name") ~= game_item.chest then
+			if not isTopBlock(game_item.chest) then
 				turtle.digUp()
 			end
 
@@ -1170,12 +1203,10 @@ end -- end of veery long bulding function
 local function restoreSession()
 	-- easy position -> over chest or sapling
 	if turtle.detectDown() then
-		local block_under = inspect("down", "name")
-
 		--turtle was waiting in starting position
-		if block_under == game_item.chest then
+		if isBottomBlock(game_item.chest) then
 			--turtle is on top of sapling, which is ok and can continue safely
-			while inspect("front", "name") ~= game_item.chest do
+			while not isFrontBlock(game_item.chest) do
 				turtle.turnLeft()
 			end
 			if starting_position == "left" then
@@ -1184,7 +1215,7 @@ local function restoreSession()
 				turtle.turnLeft()
 			end
 			return
-		elseif block_under == "minecraft:sapling" then
+		elseif isBottomBlock(game_item.sapling) then
 			return
 		end
 	end
@@ -1225,7 +1256,7 @@ local function restoreSession()
 	end
 
 	-- we must be somewhere in the air
-	while not turtle.detectDown() or inspect("down", "name") == game_item.leaves do
+	while not turtle.detectDown() or isBottomBlock(game_item.leaves) do
 		moveDown()
 		moves = moves + 1
 	end
@@ -1266,7 +1297,7 @@ local function restoreSession()
 			plantTree()
 			return
 		end
-	elseif inspect("down", "name") == game_item.torch then
+	elseif isBottomBlock(game_item.torch) then
 		moveUp()
 		return
 	else
@@ -1281,7 +1312,7 @@ local function startLumberjacking()
 		restoreSession()
 
 		while not fuelTooLow() do
-			if inspect("down", "name") == game_item.chest then
+			if isBottomBlock(game_item.chest) then
 				turtle.select(slot.log)
 				if turtle.getItemCount() > 1 and not turtle.dropDown(1) then
 					message = "wood_chest_full"
@@ -1303,7 +1334,7 @@ local function farmTreesOnce()
 	if checkInventory(felling_req) then
 		restoreSession()
 
-		if inspect("down", "name") == game_item.chest then
+		if isBottomBlock(game_item.chest) then
 			if fuelTooLow() then
 				message = "fuel"
 				return false
