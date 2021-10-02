@@ -1,0 +1,9 @@
+{
+    "Lua.diagnostics.globals": [
+        "turtle",
+        "term"
+    ],
+    "Lua.diagnostics.disable": [
+        "undefined-global"
+    ]
+}

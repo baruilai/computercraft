@@ -8,68 +8,87 @@ local min_fuel_requirement = 500
 local farm_width, farm_depth = 3, 3
 local slot = {["chest"] = 11, ["soil"] = 12, ["left"] = 13, ["front"] = 14, ["right"] = 15, ["back"] = 16}
 
-print("fuel: "..turtle.getFuelLevel())
+print("fuel: " .. turtle.getFuelLevel())
 local args = {...}
 local pastebin_code = "kxn741hQ"
 
 local game_item = {
-	chest = "minecraft:chest";
-	leaves = "minecraft:leaves";
-	torch = "minecraft:torch";
-	water = "minecraft:water";
-	reed = 	"minecraft:reeds";
-	wheat = "minecraft:wheat";
-	carrot = "minecraft:carrots";
-	potatoe = "minecraft:potatoes";
-	nether_wart = "minecraft:nether_wart";
-	melon_stem = "minecraft:melon_stem";
-	pumpkin_stem = "minecraft:pumpkin_stem";
-	melon = "minecraft:melon_block";
-	pumkin = "minecraft:pumpkin";
+	chest = "minecraft:chest",
+	leaves = "minecraft:leaves",
+	torch = "minecraft:torch",
+	water = "minecraft:water",
+	reed = "minecraft:reeds",
+	wheat = "minecraft:wheat",
+	carrot = "minecraft:carrots",
+	potatoe = "minecraft:potatoes",
+	nether_wart = "minecraft:nether_wart",
+	melon_stem = "minecraft:melon_stem",
+	pumpkin_stem = "minecraft:pumpkin_stem",
+	melon = "minecraft:melon_block",
+	pumkin = "minecraft:pumpkin"
 }
 
 local message
 local error_notification = {
-	fuel = 					"Turtle needs more fuel",
-	wood_chest_full = 		"Chest for wood is full",
-	wood_chest_missing =	"Missing chest below",
-	sapling_chest_full = 	"Chest for saplings is full",
-	not_crafty = 			"Turtle is not crafty",
-	refuel_error = 			"Error while refueling",
-	chest_down = 			"Chest down is full",
+	fuel = "Turtle needs more fuel",
+	wood_chest_full = "Chest for wood is full",
+	wood_chest_missing = "Missing chest below",
+	sapling_chest_full = "Chest for saplings is full",
+	not_crafty = "Turtle is not crafty",
+	refuel_error = "Error while refueling",
+	chest_down = "Chest down is full"
 }
 
 -- minimum item requirement for building a tree farm
 local building_req = {
 	quantity = {
-					[2] = 26, 	[3] = 30, 	[4] = 64, 
-		[5] = 64, 	[6] = 64, 	[7] = 64, 	[8] = 64, 
-		[9] = 37, 	[10] = 1, 	[11] = 1, 	[12] = 8, 
-		[13] = 17, 	[14] = 17, 	[15] = 17, 	[16] = 16
-		},
-
+		[2] = 26,
+		[3] = 30,
+		[4] = 64,
+		[5] = 64,
+		[6] = 64,
+		[7] = 64,
+		[8] = 64,
+		[9] = 37,
+		[10] = 1,
+		[11] = 1,
+		[12] = 8,
+		[13] = 17,
+		[14] = 17,
+		[15] = 17,
+		[16] = 16
+	},
 	name = {},
-
 	description = {
-								[2] = "dirt", 			[3] = "torches", 		[4] = "building block", 
-		[5] = "building block", [6] = "building block", [7] = "building block", [8] = "building block", 
-		[9] = "building block", [10] = "waterbucket",	[11] = "waterbucket",	[12] = "block going down", 
-		[13] = "left block", 	[14] = "distant block", [15] = "right block", 	[16] = "close block"
-		}
+		[2] = "dirt",
+		[3] = "torches",
+		[4] = "building block",
+		[5] = "building block",
+		[6] = "building block",
+		[7] = "building block",
+		[8] = "building block",
+		[9] = "building block",
+		[10] = "waterbucket",
+		[11] = "waterbucket",
+		[12] = "block going down",
+		[13] = "left block",
+		[14] = "distant block",
+		[15] = "right block",
+		[16] = "close block"
 	}
+}
 
 local function update()
 	--before we try to delete ourself, just check the connection OK?
 	test = http.get("http://pastebin.com/" .. pastebin_code)
 	if test then
-
 		-- first let me delete myself
 		print(fs.delete(shell.getRunningProgram()))
 
 		-- Now get the program from pastebin.com
 		-- Format: pastebin get (pasteid) (destination)
 		-- not so simple way to get name of this program without path
-		shell.run("pastebin get "..pastebin_code.." "..fs.getName(shell.getRunningProgram()))
+		shell.run("pastebin get " .. pastebin_code .. " " .. fs.getName(shell.getRunningProgram()))
 	else
 		print("Update is not possible")
 	end
@@ -80,39 +99,37 @@ function cancelTimer(duration, text)
 	timer = os.startTimer(1)
 	repeat
 		term.clear()
-		term.setCursorPos (1, 1)
-		print("fuel: "..turtle.getFuelLevel())
+		term.setCursorPos(1, 1)
+		print("fuel: " .. turtle.getFuelLevel())
 		print(text)
 		print("Press enter to enter menu.")
 		print(duration)
-		 
+
 		local id, p1 = os.pullEvent()
 		if id == "key" and p1 == 28 then
 			term.clear()
-			term.setCursorPos (1, 1)
+			term.setCursorPos(1, 1)
 			return true
 		elseif id == "timer" and p1 == timer then
-			duration = duration-1
+			duration = duration - 1
 			timer = os.startTimer(1)
 		end
-
 	until duration < 0
 	term.clear()
-	term.setCursorPos (1, 1)
+	term.setCursorPos(1, 1)
 	return false
 end
 
 -- four important moving functions
 -- mob protection is obsolete since CC 1.76
 local function moveForward(forward)
-	if forward == nil then 
-		forward = 1 
+	if forward == nil then
+		forward = 1
 	end
 
 	for i = 1, forward do
-
-		if turtle.detect() then 
-			turtle.dig() 
+		if turtle.detect() then
+			turtle.dig()
 		end
 
 		--mob and sand/gravel protection
@@ -128,14 +145,13 @@ local function moveForward(forward)
 end
 
 local function moveUp(up)
-	if up == nil then 
-		up = 1 
+	if up == nil then
+		up = 1
 	end
- 
-	for i = 1, up do
 
-		if turtle.detectUp() then 
-			turtle.digUp() 
+	for i = 1, up do
+		if turtle.detectUp() then
+			turtle.digUp()
 		end
 
 		--mob and sand/gravel protection
@@ -149,35 +165,35 @@ local function moveUp(up)
 		end
 	end
 end
- 
+
 local function moveDown(down)
-	if down == nil then 
-		down = 1 
+	if down == nil then
+		down = 1
 	end
 
 	for i = 1, down do
-
-		if turtle.detectDown() then 
-			turtle.digDown() 
+		if turtle.detectDown() then
+			turtle.digDown()
 		end
 
-			--mob and sand/gravel protection
-			while not turtle.down() do
-				if turtle.detectDown() then
-					turtle.digDown()
-					sleep(0.5)
-				else
-					turtle.attackDown()
+		--mob and sand/gravel protection
+		while not turtle.down() do
+			if turtle.detectDown() then
+				turtle.digDown()
+				sleep(0.5)
+			else
+				turtle.attackDown()
 			end
 		end
 	end
 end
- 
+
 local function moveBack(back)
-	if back == nil then back = 1 end
+	if back == nil then
+		back = 1
+	end
 
 	for i = 1, back do
-
 		while not turtle.back() do
 			turtle.turnLeft()
 			turtle.turnLeft()
@@ -197,7 +213,7 @@ end
 
 -- protection against unlimited fuel errors
 local function needToRefuel()
-	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > optimum_fuel_level then 
+	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > optimum_fuel_level then
 		return false
 	else
 		return true
@@ -205,7 +221,7 @@ local function needToRefuel()
 end
 
 local function fuelTooLow()
-	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > min_fuel_requirement then 
+	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > min_fuel_requirement then
 		return false
 	else
 		return true
@@ -213,11 +229,11 @@ local function fuelTooLow()
 end
 
 local function selectNextSlot()
-		--if there is no material, select next slot
-		--přejmenovat ať to dává větší smysl
-		if turtle.getItemCount(turtle.getSelectedSlot()) == 0 and turtle.getSelectedSlot() < 11 then 
-				turtle.select(turtle.getSelectedSlot() + 1)
-		end
+	--if there is no material, select next slot
+	--přejmenovat ať to dává větší smysl
+	if turtle.getItemCount(turtle.getSelectedSlot()) == 0 and turtle.getSelectedSlot() < 11 then
+		turtle.select(turtle.getSelectedSlot() + 1)
+	end
 end
 
 local function checkWall()
@@ -227,15 +243,13 @@ local function checkWall()
 		if block.name == game_item.reed then
 			turtle.dig()
 		else
-
 			for i = 13, 16 do
 				turtle.select(i)
 				if turtle.compare() then
 					turtle.select(last_slot)
-					return(i)
+					return (i)
 				end
 			end
-			
 		end
 	end
 	turtle.select(last_slot)
@@ -259,7 +273,8 @@ local function inspect(direction, requested_data)
 		elseif requested_data == "metadata" then
 			return item.metadata
 		end
-	else return false
+	else
+		return false
 	end
 end
 
@@ -278,7 +293,7 @@ local function checkChestDown()
 	turtle.select(1)
 	while turtle.getItemCount(turtle.getSelectedSlot()) == 0 do
 		if turtle.getSelectedSlot() == 12 then
-				error("inventory is empty")
+			error("inventory is empty")
 		end
 		turtle.select(turtle.getSelectedSlot() + 1)
 	end
@@ -333,9 +348,9 @@ local function harvest(length) --harvest only, no planting
 	till()
 
 	while not fuelTooLow() do
-		if checkWall() == slot.front then 
+		if checkWall() == slot.front then
 			turtle.turnRight()
-			if turtle.detect() and checkWall() == slot.right then 
+			if turtle.detect() and checkWall() == slot.right then
 				turtle.turnLeft()
 				turtle.turnLeft()
 			else
@@ -348,7 +363,7 @@ local function harvest(length) --harvest only, no planting
 
 		if checkWall() == slot.back then
 			turtle.turnLeft()
-			if turtle.detect() and checkWall() == slot.right then 
+			if turtle.detect() and checkWall() == slot.right then
 				turtle.turnLeft()
 				turtle.turnLeft()
 			else
@@ -377,16 +392,15 @@ local function harvest(length) --harvest only, no planting
 end
 
 local function plant(length)
-
 	local function getCrop()
 		--dig only full grown crops
 		local cropType = inspect("down", "name")
 		if cropType == game_item.wheat or cropType == game_item.carrot or cropType == game_item.potatoe then
+			--dig only full grown netherwart
 			if inspect("down", "metadata") == 7 then
 				turtle.digDown()
 				turtle.placeDown()
 			end
-		--dig only full grown netherwart
 		elseif cropType == game_item.nether_wart then
 			if inspect("down", "metadata") == 3 then
 				turtle.digDown()
@@ -406,7 +420,6 @@ local function plant(length)
 	end
 
 	local function seed()
-
 		while not turtle.detect() do
 			moveForward()
 			getCrop()
@@ -416,10 +429,9 @@ local function plant(length)
 	seed()
 
 	while not fuelTooLow() do
-
-		if checkWall() == slot.front then 
+		if checkWall() == slot.front then
 			turtle.turnRight()
-			if turtle.detect() and checkWall() == slot.right then 
+			if turtle.detect() and checkWall() == slot.right then
 				turtle.turnLeft()
 				turtle.turnLeft()
 			else
@@ -434,7 +446,7 @@ local function plant(length)
 
 		if checkWall() == slot.back then
 			turtle.turnLeft()
-			if turtle.detect() and checkWall() == slot.right then 
+			if turtle.detect() and checkWall() == slot.right then
 				turtle.turnLeft()
 				turtle.turnLeft()
 			else
@@ -466,56 +478,57 @@ local function plant(length)
 			end
 		end
 
-			seed()
-	end 
-end
-
-local function placeSolidBlock(direction)
-
-	if direction == "up" then
-			if not turtle.compareUp() and turtle.detectUp() then
-				turtle.digUp()
-			end
-			while not turtle.placeUp() and turtle.getItemCount(turtle.getSelectedSlot) > 0 do
-				turtle.attackUp()
-			end
-			selectNextSlot()
-	elseif direction == "front" then
-			if not turtle.compare() and turtle.detect() then
-				turtle.dig()
-			end
-			while not turtle.place() and turtle.getItemCount(turtle.getSelectedSlot) > 0 do
-				turtle.attack()
-			end
-			selectNextSlot()
-	elseif direction == "down" then 
-			if not turtle.compareDown() and turtle.detectDown() then 
-				turtle.digDown() 
-			else
-				while not turtle.placeDown() and not turtle.detectDown() and turtle.getItemCount(turtle.getSelectedSlot) > 0 do
-					turtle.attackDown()
-					print("attack")
-				end
-				selectNextSlot()
-			end
-			--if we use sand or gravel for drying water or lava lake
-			while not turtle.detectDown() do
-				turtle.placeDown()
-				selectNextSlot()
-			end
+		seed()
 	end
 end
 
-local function laySurface (x, z, direction, go_to_start)
-	if direction == nil then direction = "down" end
+local function placeSolidBlock(direction)
+	if direction == "up" then
+		if not turtle.compareUp() and turtle.detectUp() then
+			turtle.digUp()
+		end
+		while not turtle.placeUp() and turtle.getItemCount(turtle.getSelectedSlot) > 0 do
+			turtle.attackUp()
+		end
+		selectNextSlot()
+	elseif direction == "front" then
+		if not turtle.compare() and turtle.detect() then
+			turtle.dig()
+		end
+		while not turtle.place() and turtle.getItemCount(turtle.getSelectedSlot) > 0 do
+			turtle.attack()
+		end
+		selectNextSlot()
+	elseif direction == "down" then
+		if not turtle.compareDown() and turtle.detectDown() then
+			turtle.digDown()
+		else
+			while not turtle.placeDown() and not turtle.detectDown() and turtle.getItemCount(turtle.getSelectedSlot) > 0 do
+				turtle.attackDown()
+				print("attack")
+			end
+			selectNextSlot()
+		end
+		--if we use sand or gravel for drying water or lava lake
+		while not turtle.detectDown() do
+			turtle.placeDown()
+			selectNextSlot()
+		end
+	end
+end
+
+local function laySurface(x, z, direction, go_to_start)
+	if direction == nil then
+		direction = "down"
+	end
 
 	--place blocks in one line
 	local function placeBlock(length)
-
-		if length == nil then length = 1 end
+		if length == nil then
+			length = 1
+		end
 
 		for i = 2, length do
-			
 			if direction == "digdown" then
 				if turtle.detectDown() then
 					turtle.digDown()
@@ -543,16 +556,15 @@ local function laySurface (x, z, direction, go_to_start)
 
 	--place x number of lines
 	for r = 1, x do
-
 		placeBlock(z)
 
-		if r%2 == 1 and r ~= x then 
+		if r % 2 == 1 and r ~= x then
 			turtle.turnRight()
 			moveForward()
 			turtle.turnRight()
 		end
 
-		if r%2 == 0 and r ~= x then
+		if r % 2 == 0 and r ~= x then
 			turtle.turnLeft()
 			moveForward()
 			turtle.turnLeft()
@@ -561,13 +573,13 @@ local function laySurface (x, z, direction, go_to_start)
 
 	--return to start
 	if go_to_start == true then
-		if x%2 == 0 then 
+		if x % 2 == 0 then
 			turtle.turnRight()
 			moveForward(x - 1)
 			turtle.turnRight()
 		end
 
-		if x%2 == 1 then
+		if x % 2 == 1 then
 			moveBack(z - 1)
 			turtle.turnLeft()
 			moveForward(x - 1)
@@ -620,13 +632,27 @@ end
 
 -- check for item name in inventory
 local function checkItemName(slot)
-	if slot == nil then slot = turtle.getSelectedSlot() end
+	if slot == nil then
+		slot = turtle.getSelectedSlot()
+	end
 	item = turtle.getItemDetail(slot)
 	if item then
 		return item.name
 	else
 		return false
 	end
+end
+
+local function checkSlot(slot)
+	if inventory_table.quantity[slot] == nil then
+		return true
+	elseif turtle.getItemCount(slot) < inventory_table.quantity[slot] then
+		return false
+	elseif checkItemName(slot) ~= inventory_table.name[slot] and inventory_table.name[slot] ~= nil then
+		return false
+	end
+
+	return true
 end
 
 local function checkInventory(inventory_table)
@@ -639,18 +665,6 @@ local function checkInventory(inventory_table)
 
 	for key, value in pairs(inventory_table) do
 		line_number = line_number + 1
-	end
-
-	local function checkSlot(slot)
-		if inventory_table.quantity[slot] == nil then
-				return true
-		elseif turtle.getItemCount(slot) < inventory_table.quantity[slot] then
-				return false
-		elseif checkItemName(slot) ~= inventory_table.name[slot] and inventory_table.name[slot] ~= nil then
-				return false
-		end
-
-		return true
 	end
 
 	while req <= 16 do
@@ -668,17 +682,16 @@ local function checkInventory(inventory_table)
 
 		for i = 1, 16 do
 			if not checkSlot(i) then
+				term.setCursorPos(2, lines + 5)
+				term.write(inventory_table.quantity[i])
 
-					term.setCursorPos(2, lines + 5)
-					term.write(inventory_table.quantity[i])
+				term.setCursorPos(5, lines + 5)
+				term.write(inventory_table.description[i])
 
-					term.setCursorPos(5, lines + 5)
-					term.write(inventory_table.description[i])
-
-					term.setCursorPos(32, lines + 5)
-					term.write(i)
-					lines = lines + 1
-			else 
+				term.setCursorPos(32, lines + 5)
+				term.write(i)
+				lines = lines + 1
+			else
 				req = req + 1
 			end
 		end
@@ -688,7 +701,7 @@ local function checkInventory(inventory_table)
 		term.setCursorPos(1, term_height)
 		term.write("Press q to quit")
 
-		if req <= 16 then 
+		if req <= 16 then
 			local event, p1 = os.pullEvent()
 			if event == "key" and p1 == 16 then
 				term.clear()
@@ -749,13 +762,13 @@ local function farm()
 	turtle.select(1)
 	while turtle.getItemCount(turtle.getSelectedSlot()) == 0 do
 		if turtle.getSelectedSlot() == 16 then
-				error("inventory is empty")
+			error("inventory is empty")
 		end
 		turtle.select(turtle.getSelectedSlot() + 1)
 	end
 	if turtle.getSelectedSlot() > 10 then
 		turtle.select(1)
-	end 
+	end
 	plant()
 	unload()
 end
@@ -778,28 +791,28 @@ local function farmForever()
 
 	turtle.select(1)
 	while turtle.getItemCount(turtle.getSelectedSlot()) == 0 do
-			if turtle.getSelectedSlot() == 16 then
-					error("inventory is empty")
-			end
-			turtle.select(turtle.getSelectedSlot() + 1)
+		if turtle.getSelectedSlot() == 16 then
+			error("inventory is empty")
+		end
+		turtle.select(turtle.getSelectedSlot() + 1)
 	end
 
 	if turtle.getSelectedSlot() > 10 then
 		turtle.select(1)
-	end 
+	end
 
 	while not fuelTooLow() do
 		plant()
 		unload()
-		
-	for i = 1, wait_for_crops do
-		term.clear()
-		term.setCursorPos(1, 1)
-		print("fuel: "..turtle.getFuelLevel())
-		print("Waiting for crops to grow")
-		print(wait_for_crops - i)
-		sleep(1)
-	end
+
+		for i = 1, wait_for_crops do
+			term.clear()
+			term.setCursorPos(1, 1)
+			print("fuel: " .. turtle.getFuelLevel())
+			print("Waiting for crops to grow")
+			print(wait_for_crops - i)
+			sleep(1)
+		end
 	end
 end
 
@@ -809,13 +822,9 @@ local function createStartup()
 		fs.delete("startup")
 	end
 
-	local file = fs.open("startup","w")
-	file.write('shell.run("' ..fs.getName(shell.getRunningProgram()).. '", "loop")')
+	local file = fs.open("startup", "w")
+	file.write('shell.run("' .. fs.getName(shell.getRunningProgram()) .. '", "loop")')
 	file.close()
-end
-
-local function deleteStartup()
-	fs.delete("startup")
 end
 
 local function farmLoop()
@@ -829,27 +838,26 @@ local function options()
 	local menustate = "main"
 
 	local menu = {
-			["main"] = {"Wait for crops to grow", "Minimum fuel required"},
-			["Wait for crops to grow"] = {0, 3, 60, 1974, 2256, 2867, 3277}
-		}
+		["main"] = {"Wait for crops to grow", "Minimum fuel required"},
+		["Wait for crops to grow"] = {0, 3, 60, 1974, 2256, 2867, 3277}
+	}
 
 	local function printLeft(string, y_position)
 		term.setCursorPos(2, y_position)
 		term.write(string)
 	end
 
-		term.clear()
-		for i = 1, #menu[menustate].options do
-			if i == selected then
-				printLeft("[ "..menu[menustate].options[i].." ]", term_height / 2 - #menu[menustate].options / 2 + i)
-			else
-				printCentered(menu[menustate].options[i], term_height / 2 - #menu[menustate].options / 2 + i)
-			end
+	term.clear()
+	for i = 1, #menu[menustate].options do
+		if i == selected then
+			printLeft("[ " .. menu[menustate].options[i] .. " ]", term_height / 2 - #menu[menustate].options / 2 + i)
+		else
+			printCentered(menu[menustate].options[i], term_height / 2 - #menu[menustate].options / 2 + i)
 		end
+	end
 end
 
 local function runMenu()
-
 	local function checkStartup()
 		if fs.exists("startup") then
 			return "Delete startup file"
@@ -872,9 +880,9 @@ local function runMenu()
 
 	local menu = {
 		["main"] = {
-			options =   {"Farm just once",  "Harvest all crops",    "Farm in loop",   "Make farm", startup, 		"Quit"},
-			job =       { farm,              harvest,                farmLoop,         makeFarm,   modifyStartup,	"quit"}
-		},
+			options = {"Farm just once", "Harvest all crops", "Farm in loop", "Make farm", startup, "Quit"},
+			job = {farm, harvest, farmLoop, makeFarm, modifyStartup, "quit"}
+		}
 	}
 
 	local term_width, term_height = term.getSize()
@@ -907,9 +915,9 @@ local function runMenu()
 		--this is only to update startup entry, probably should use menu["main"].options[3] = startup
 		local menu = {
 			["main"] = {
-				options =   {"Farm just once",  "Harvest all crops",    "Farm in loop",   "Make farm", startup, 		"Quit"},
-				job =       { farm,              harvest,                farmLoop,         makeFarm,   modifyStartup,	"quit"}
-			},
+				options = {"Farm just once", "Harvest all crops", "Farm in loop", "Make farm", startup, "Quit"},
+				job = {farm, harvest, farmLoop, makeFarm, modifyStartup, "quit"}
+			}
 		}
 
 		term.clear()
@@ -918,13 +926,13 @@ local function runMenu()
 
 		for i = 1, #menu[menustate].options do
 			if i == selected then
-				printCentered("[ "..menu[menustate].options[i].." ]", term_height / 2 - #menu[menustate].options + i * 2)
+				printCentered("[ " .. menu[menustate].options[i] .. " ]", term_height / 2 - #menu[menustate].options + i * 2)
 			else
 				printCentered(menu[menustate].options[i], term_height / 2 - #menu[menustate].options + i * 2)
 			end
 		end
 
-		event, key = os.pullEvent("key")
+		local event, key = os.pullEvent("key")
 
 		if key == keys.down and selected < #menu[menustate].options then
 			selected = selected + 1
@@ -944,8 +952,8 @@ local function runMenu()
 				menustate = menu[menustate].job[selected]
 				selected = 1
 			end
-			
-			if menustate == "quit" then 
+
+			if menustate == "quit" then
 				term.clear()
 				term.setCursorPos(1, 1)
 				return

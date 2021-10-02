@@ -2,63 +2,103 @@
 -- version 3 for Minecraft 1.8.9
 
 -- you can edit these variables
-local sleep_on_startup = 3 			--seconds, to prevent lagging caused by too many computer starting
-local wait_for_saplings = 60		--seconds shoud get you up to 6 logs per minute, feel free to experiment
-local min_fuel_requirement = 500 	--turtle will not work if less
-local optimum_fuel_level = 5000		--turtle will try to keep fuel level around this level (search for unload function)
-local starting_position = "left"	--if you change starting position to right side, change this to "right"
-local saplings_chest = "left"		-- to delete
-local get_sapling_pos = "front"		-- where are saplings collected - front, back, left right
-local max_trunk_height = 20 		-- to implement into restore session
+local sleep_on_startup = 3 --seconds, to prevent lagging caused by too many computer starting
+local wait_for_saplings = 60 --seconds shoud get you up to 6 logs per minute, feel free to experiment
+local min_fuel_requirement = 500 --turtle will not work if less
+local optimum_fuel_level = 5000 --turtle will try to keep fuel level around this level (search for unload function)
+local starting_position = "left" --if you change starting position to right side, change this to "right"
+local get_sapling_pos = "front" -- where are saplings collected - front, back, left right
+local max_trunk_height = 20 -- to implement into restore session
 
 -- you should not edit these variables, unless you know what you are doing
 local pastebin_code = "dN6aBV51"
 local working_altitude = 4
-local slot = {sapling = 1, dirt = 2, log = 3, cobblestone = 4, bucket1 = 10, bucket2 = 11, down = 12, to_start = 13, front = 14, turn = 15, back = 16}
+local slot = {
+	sapling = 1,
+	dirt = 2,
+	log = 3,
+	cobblestone = 4,
+	bucket1 = 10,
+	bucket2 = 11,
+	down = 12,
+	to_start = 13,
+	front = 14,
+	turn = 15,
+	back = 16
+}
 local turtle_need_fuel = true
 
 local message
 local error_notification = {
-	fuel = 					"Turtle needs more fuel",
-	wood_chest_full = 		"Chest for wood is full",
-	wood_chest_missing =	"Missing chest below",
-	sapling_chest_full = 	"Chest for saplings is full",
-	not_crafty = 			"Turtle is not crafty",
-	refuel_error = 			"Error while refueling",
+	fuel = "Turtle needs more fuel",
+	wood_chest_full = "Chest for wood is full",
+	wood_chest_missing = "Missing chest below",
+	sapling_chest_full = "Chest for saplings is full",
+	not_crafty = "Turtle is not crafty",
+	refuel_error = "Error while refueling"
 }
 
 -- minimum item requirement for farming trees
 local felling_req = {
-	quantity = 	{[1] = 1, [2] = 1, [3] = 2, [12] = 1, [13] = 1, [14] = 1, [15] = 1, [16] = 1},
-	name = 		{},
-	description = {[1] = "saplings", [2] = "dirt", [3] = "logs", [12] = "sappling block", [13] = "finishing block", [14] = "distant block", [15] = "turnaround block", [16] = "back block"},
+	quantity = {[1] = 1, [2] = 1, [3] = 2, [12] = 1, [13] = 1, [14] = 1, [15] = 1, [16] = 1},
+	name = {},
+	description = {
+		[1] = "saplings",
+		[2] = "dirt",
+		[3] = "logs",
+		[12] = "sappling block",
+		[13] = "finishing block",
+		[14] = "distant block",
+		[15] = "turnaround block",
+		[16] = "back block"
+	}
 }
 
 -- minimum item requirement for building a tree farm
 local building_req = {
 	quantity = {
-					[2] = 26, 	[3] = 30, 	[4] = 64, 
-		[5] = 64, 	[6] = 64, 	[7] = 64, 	[8] = 64, 
-		[9] = 37, 	[10] = 1, 	[11] = 1, 	[12] = 8, 
-		[13] = 17, 	[14] = 17, 	[15] = 17, 	[16] = 16
-		},
-
+		[2] = 26,
+		[3] = 30,
+		[4] = 64,
+		[5] = 64,
+		[6] = 64,
+		[7] = 64,
+		[8] = 64,
+		[9] = 37,
+		[10] = 1,
+		[11] = 1,
+		[12] = 8,
+		[13] = 17,
+		[14] = 17,
+		[15] = 17,
+		[16] = 16
+	},
 	name = {},
-
 	description = {
-								[2] = "dirt", 			[3] = "torches", 		[4] = "building block", 
-		[5] = "building block", [6] = "building block", [7] = "building block", [8] = "building block", 
-		[9] = "building block", [10] = "waterbucket",	[11] = "waterbucket",	[12] = "block going down", 
-		[13] = "left block", 	[14] = "distant block", [15] = "right block", 	[16] = "close block"
-		}
+		[2] = "dirt",
+		[3] = "torches",
+		[4] = "building block",
+		[5] = "building block",
+		[6] = "building block",
+		[7] = "building block",
+		[8] = "building block",
+		[9] = "building block",
+		[10] = "waterbucket",
+		[11] = "waterbucket",
+		[12] = "block going down",
+		[13] = "left block",
+		[14] = "distant block",
+		[15] = "right block",
+		[16] = "close block"
 	}
+}
 
 -- to do
 local game_item = {
-	chest = "minecraft:chest";
-	leaves = "minecraft:leaves";
-	torch = "minecraft:torch";
-	water = "minecraft:water";
+	chest = "minecraft:chest",
+	leaves = "minecraft:leaves",
+	torch = "minecraft:torch",
+	water = "minecraft:water"
 }
 
 local args = {...}
@@ -67,14 +107,13 @@ local function update()
 	--before we try to delete ourself, just check the connection OK?
 	test = http.get("http://pastebin.com/" .. pastebin_code)
 	if test then
-
 		-- first let me delete myself
 		print(fs.delete(shell.getRunningProgram()))
 
 		-- Now get the program from pastebin.com
 		-- Format: pastebin get (pasteid) (destination)
 		-- not so simple way to get name of this program without path
-		shell.run("pastebin get "..pastebin_code.." "..fs.getName(shell.getRunningProgram()))
+		shell.run("pastebin get " .. pastebin_code .. " " .. fs.getName(shell.getRunningProgram()))
 	else
 		print("Update is not possible")
 	end
@@ -86,8 +125,12 @@ local function createStartup()
 		fs.delete("startup")
 	end
 
-	local file = fs.open("startup","w")
-	file.write('shell.run("' ..fs.getName(shell.getRunningProgram()).. '", "' ..starting_position.. '", "' ..get_sapling_pos.. '", "' ..wait_for_saplings.. '", "skipmenu")')
+	local file = fs.open("startup", "w")
+	file.write(
+		'shell.run("' ..
+			fs.getName(shell.getRunningProgram()) ..
+				'", "' .. starting_position .. '", "' .. get_sapling_pos .. '", "' .. wait_for_saplings .. '", "skipmenu")'
+	)
 	file.close()
 end
 
@@ -96,39 +139,37 @@ function cancelTimer(duration, text)
 	timer = os.startTimer(1)
 	repeat
 		term.clear()
-		term.setCursorPos (1, 1)
-		print("fuel: "..turtle.getFuelLevel())
+		term.setCursorPos(1, 1)
+		print("fuel: " .. turtle.getFuelLevel())
 		print(text)
 		print("Press enter to enter menu.")
 		print(duration)
-		 
+
 		local id, p1 = os.pullEvent()
 		if id == "key" and p1 == 28 then
 			term.clear()
-			term.setCursorPos (1, 1)
+			term.setCursorPos(1, 1)
 			return true
 		elseif id == "timer" and p1 == timer then
-			duration = duration-1
+			duration = duration - 1
 			timer = os.startTimer(1)
 		end
-
 	until duration < 0
 	term.clear()
-	term.setCursorPos (1, 1)
+	term.setCursorPos(1, 1)
 	return false
 end
 
 -- four important moving functions
 -- mob protection is obsolete since CC 1.76
 local function moveForward(forward)
-	if forward == nil then 
-		forward = 1 
+	if forward == nil then
+		forward = 1
 	end
 
 	for i = 1, forward do
-
-		if turtle.detect() then 
-			turtle.dig() 
+		if turtle.detect() then
+			turtle.dig()
 		end
 
 		--mob and sand/gravel protection
@@ -144,14 +185,13 @@ local function moveForward(forward)
 end
 
 local function moveUp(up)
-	if up == nil then 
-		up = 1 
+	if up == nil then
+		up = 1
 	end
- 
-	for i = 1, up do
 
-		if turtle.detectUp() then 
-			turtle.digUp() 
+	for i = 1, up do
+		if turtle.detectUp() then
+			turtle.digUp()
 		end
 
 		--mob and sand/gravel protection
@@ -165,35 +205,35 @@ local function moveUp(up)
 		end
 	end
 end
- 
+
 local function moveDown(down)
-	if down == nil then 
-		down = 1 
+	if down == nil then
+		down = 1
 	end
 
 	for i = 1, down do
-
-		if turtle.detectDown() then 
-			turtle.digDown() 
+		if turtle.detectDown() then
+			turtle.digDown()
 		end
 
-			--mob and sand/gravel protection
-			while not turtle.down() do
-				if turtle.detectDown() then
-					turtle.digDown()
-					sleep(0.5)
-				else
-					turtle.attackDown()
+		--mob and sand/gravel protection
+		while not turtle.down() do
+			if turtle.detectDown() then
+				turtle.digDown()
+				sleep(0.5)
+			else
+				turtle.attackDown()
 			end
 		end
 	end
 end
- 
+
 local function moveBack(back)
-	if back == nil then back = 1 end
+	if back == nil then
+		back = 1
+	end
 
 	for i = 1, back do
-
 		while not turtle.back() do
 			turtle.turnLeft()
 			turtle.turnLeft()
@@ -213,7 +253,7 @@ end
 
 -- protection against unlimited fuel errors
 local function needToRefuel()
-	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > optimum_fuel_level then 
+	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > optimum_fuel_level then
 		return false
 	else
 		return true
@@ -221,7 +261,7 @@ local function needToRefuel()
 end
 
 local function fuelTooLow()
-	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > min_fuel_requirement then 
+	if turtle.getFuelLevel() == "unlimited" or turtle.getFuelLevel() > min_fuel_requirement then
 		return false
 	else
 		return true
@@ -246,7 +286,8 @@ local function inspect(direction, requested_data)
 		elseif requested_data == "metadata" then
 			return item.metadata
 		end
-	else return false
+	else
+		return false
 	end
 end
 
@@ -263,13 +304,12 @@ local function plantTree()
 	turtle.select(slot.sapling)
 
 	if turtle.getItemCount() > 1 then
-
 		if not turtle.placeDown() then --must have not been able to place a sapling
 			moveDown()
 			turtle.select(slot.dirt)
 
-			if not turtle.compareDown() then 
-				turtle.digDown() 
+			if not turtle.compareDown() then
+				turtle.digDown()
 			end
 
 			turtle.placeDown()
@@ -306,7 +346,7 @@ local function checkTree()
 		plantTree()
 		return true
 	else
-		 --[[moveForward()
+		--[[moveForward()
 		--prevent broken trees
 		if turtle.compareDown() or turtle.compareUp() then
 			chopTree()
@@ -336,10 +376,8 @@ local function checkWall()
 end
 
 local function unLoad()
-
 	-- turtle will consume 64 wood(not logs) every time it goes under optimum fuel level
 	local function refuel()
-
 		if turtle.getItemCount(slot.log) > 16 then
 			redstone.setOutput("top", true)
 
@@ -378,10 +416,9 @@ local function unLoad()
 
 			if turtle.craft ~= nil then
 				turtle.craft()
+				turtle.refuel(64)
+				print("fuel: " .. turtle.getFuelLevel())
 			end
-
-			turtle.refuel(64)
-			print("fuel: ".. turtle.getFuelLevel())
 
 			turtle.select(slot.sapling)
 			turtle.suck()
@@ -410,10 +447,10 @@ local function unLoad()
 		if turtle.compareTo(i) then
 			turtle.select(i)
 			if turtle.getItemCount() > 1 then
-				if not turtle.dropDown() then 
+				if not turtle.dropDown() then
 					message = "wood_chest_full"
 					return
-				end	
+				end
 			end
 			turtle.select(slot.log)
 		end
@@ -421,7 +458,7 @@ local function unLoad()
 
 	--unload rest (mainly for saplings)
 	if starting_position == "left" then
-		turtle.turnLeft() 
+		turtle.turnLeft()
 	elseif starting_position == "right" then
 		turtle.turnRight()
 	end
@@ -429,14 +466,14 @@ local function unLoad()
 	turtle.select(slot.sapling)
 	for i = slot.cobblestone, slot.bucket2 do
 		--if turtle.compareTo(i) then
-			turtle.select(i)
-			if turtle.getItemCount() > 0 then
-				if not turtle.drop() then
-					message = "sapling_chest_full"
-					return
-				end
+		turtle.select(i)
+		if turtle.getItemCount() > 0 then
+			if not turtle.drop() then
+				message = "sapling_chest_full"
+				return
 			end
-			turtle.select(slot.sapling)
+		end
+		turtle.select(slot.sapling)
 		--end
 	end
 
@@ -445,7 +482,7 @@ local function unLoad()
 	end
 
 	if starting_position == "left" then
-		turtle.turnRight() 
+		turtle.turnRight()
 	elseif starting_position == "right" then
 		turtle.turnLeft()
 	end
@@ -453,10 +490,8 @@ end
 
 -- could use some refactoring
 local function farmTrees()
-
 	local max_move = 250 -- not very effective attempt to prevent rogue turtles
 	while max_move > 1 do
-
 		turtle.select(slot.sapling)
 		while not turtle.detect() or inspect("front", "name") == game_item.leaves do
 			moveForward()
@@ -471,7 +506,7 @@ local function farmTrees()
 					turtle.turnLeft()
 				end
 				if starting_position == "left" then
-					turtle.turnRight() 
+					turtle.turnRight()
 				elseif starting_position == "right" then
 					turtle.turnLeft()
 				end
@@ -490,7 +525,7 @@ local function farmTrees()
 		if not checkTree() and turtle.detect() then
 			local wall_number = checkWall()
 
-			if wall_number == slot.front then 
+			if wall_number == slot.front then
 				turtle.turnRight()
 
 				if inspect("front", "name") == game_item.leaves then
@@ -509,8 +544,8 @@ local function farmTrees()
 				if not turtle.detect() then
 					turtle.turnRight()
 				end
-
 			elseif wall_number == slot.back then
+				--heading for opposite wall and then to start
 				turtle.turnLeft()
 				if inspect("front", "name") == game_item.leaves then
 					turtle.dig()
@@ -528,14 +563,12 @@ local function farmTrees()
 				if not turtle.detect() then
 					turtle.turnLeft()
 				end
-
-			--heading for opposite wall and then to start
 			elseif wall_number == slot.turn then
+				--for collecting saplings (turtle go down)
 				turtle.turnLeft()
 				turtle.turnLeft()
-
-			--for collecting saplings (turtle go down)
 			elseif wall_number == slot.down then
+				--last wall before heading to start
 				turtle.select(slot.down)
 
 				if inspect("down", "name") == game_item.leaves then
@@ -550,7 +583,7 @@ local function farmTrees()
 					end
 					travelled = travelled + 1
 				end
-				
+
 				if turtle.compareDown() then
 					moveUp()
 					travelled = travelled - 1
@@ -564,13 +597,13 @@ local function farmTrees()
 
 				moveUp(travelled)
 
-				if starting_position == "left"  and get_sapling_pos == "front" then
+				if starting_position == "left" and get_sapling_pos == "front" then
 					turtle.turnRight()
-				elseif starting_position == "left"  and get_sapling_pos == "back" then
+				elseif starting_position == "left" and get_sapling_pos == "back" then
 					turtle.turnLeft()
 				elseif starting_position == "right" and get_sapling_pos == "front" then
 					turtle.turnLeft()
-				elseif starting_position == "right"  and get_sapling_pos == "back" then
+				elseif starting_position == "right" and get_sapling_pos == "back" then
 					turtle.turnRight()
 				end
 
@@ -587,19 +620,16 @@ local function farmTrees()
 					steps = steps + 1
 				end
 
-				if starting_position == "left"  and get_sapling_pos == "front" then
+				if starting_position == "left" and get_sapling_pos == "front" then
 					turtle.turnRight()
-				elseif starting_position == "left"  and get_sapling_pos == "back" then
+				elseif starting_position == "left" and get_sapling_pos == "back" then
 					turtle.turnLeft()
 				elseif starting_position == "right" and get_sapling_pos == "front" then
 					turtle.turnLeft()
-				elseif starting_position == "right"  and get_sapling_pos == "back" then
+				elseif starting_position == "right" and get_sapling_pos == "back" then
 					turtle.turnRight()
 				end
-
-			--last wall before heading to start
 			elseif wall_number == slot.to_start then
-
 				if starting_position == "left" then
 					turtle.turnLeft()
 				elseif starting_position == "right" then
@@ -615,15 +645,15 @@ local function farmTrees()
 						turtle.turnLeft()
 						moveForward()
 						turtle.turnRight()
-					end				
+					end
 				elseif starting_position == "right" then
 					while turtle.detect() do
 						turtle.turnRight()
 						moveForward()
 						turtle.turnLeft()
-					end		
+					end
 				end
-				
+
 				moveForward()
 				turtle.turnLeft()
 				turtle.turnLeft()
@@ -633,18 +663,19 @@ local function farmTrees()
 				end
 			elseif wall_number == slot.cobblestone then
 				error("something wrong")
-			
 			else
 				moveForward()
 			end
 		end
 		max_move = max_move - 1
-	end 
+	end
 end
 
 -- check for item name in inventory
 local function checkItemName(slot)
-	if slot == nil then slot = turtle.getSelectedSlot() end
+	if slot == nil then
+		slot = turtle.getSelectedSlot()
+	end
 	item = turtle.getItemDetail(slot)
 	if item then
 		return item.name
@@ -659,11 +690,11 @@ local function checkInv(inventory_table)
 
 	local function checkSlot(slot)
 		if inventory_table.quantity[slot] == nil then
-				return true
+			return true
 		elseif turtle.getItemCount(slot) < inventory_table.quantity[slot] then
-				return false
+			return false
 		elseif checkItemName(slot) ~= inventory_table.name[slot] and inventory_table.name[slot] ~= nil then
-				return false
+			return false
 		end
 
 		return true
@@ -697,11 +728,11 @@ local function checkInventory(inventory_table)
 
 	local function checkSlot(slot)
 		if inventory_table.quantity[slot] == nil then
-				return true
+			return true
 		elseif turtle.getItemCount(slot) < inventory_table.quantity[slot] then
-				return false
+			return false
 		elseif checkItemName(slot) ~= inventory_table.name[slot] and inventory_table.name[slot] ~= nil then
-				return false
+			return false
 		end
 
 		return true
@@ -722,17 +753,16 @@ local function checkInventory(inventory_table)
 
 		for i = 1, 16 do
 			if not checkSlot(i) then
+				term.setCursorPos(2, lines + 5)
+				term.write(inventory_table.quantity[i])
 
-					term.setCursorPos(2, lines + 5)
-					term.write(inventory_table.quantity[i])
+				term.setCursorPos(5, lines + 5)
+				term.write(inventory_table.description[i])
 
-					term.setCursorPos(5, lines + 5)
-					term.write(inventory_table.description[i])
-
-					term.setCursorPos(32, lines + 5)
-					term.write(i)
-					lines = lines + 1
-			else 
+				term.setCursorPos(32, lines + 5)
+				term.write(i)
+				lines = lines + 1
+			else
 				req = req + 1
 			end
 		end
@@ -742,7 +772,7 @@ local function checkInventory(inventory_table)
 		term.setCursorPos(1, term_height)
 		term.write("Press q to quit")
 
-		if req <= 16 then 
+		if req <= 16 then
 			local event, p1 = os.pullEvent()
 			if event == "key" and p1 == 16 then
 				term.clear()
@@ -759,17 +789,18 @@ end
 -- veeery long function with farm building instructions
 local function makeTreeFarm()
 	local function placeCobbleDown(length)
-		if length == nil then length = 1 end
+		if length == nil then
+			length = 1
+		end
 
 		for i = 2, length do
-
 			if inspect("up", "name") ~= game_item.chest then
 				turtle.digUp()
 			end
-			
-			if not turtle.compareDown() then 
+
+			if not turtle.compareDown() then
 				turtle.digDown()
-				turtle.placeDown() 
+				turtle.placeDown()
 			end
 
 			checkForEmptySlot()
@@ -778,9 +809,9 @@ local function makeTreeFarm()
 		end
 
 		turtle.digUp()
-		if not turtle.compareDown() then 
+		if not turtle.compareDown() then
 			turtle.digDown()
-			turtle.placeDown() 
+			turtle.placeDown()
 		end
 
 		checkForEmptySlot()
@@ -788,7 +819,7 @@ local function makeTreeFarm()
 
 	local function placeCobbleAround()
 		turtle.turnLeft()
-		
+
 		placeCobbleDown(4)
 		turtle.turnRight()
 		placeCobbleDown(18)
@@ -811,33 +842,29 @@ local function makeTreeFarm()
 		end
 
 		checkForEmptySlot()
-
 	end
 
 	local function layFloor(x, z)
 		checkForEmptySlot()
 
 		for r = 1, x do
-
 			placeCobbleDown(z)
 
-			if r%2 == 1 and r ~= x then 
+			if r % 2 == 1 and r ~= x then
 				turtle.turnRight()
 				moveForward()
 				turtle.turnRight()
 			end
 
-			if r%2 == 0 and r ~= x then
+			if r % 2 == 0 and r ~= x then
 				turtle.turnLeft()
 				moveForward()
 				turtle.turnLeft()
 			end
-
 		end
 	end
 
 	local function fillWaterCanal()
-
 		local function fillBucket()
 			moveBack()
 			sleep(1)
@@ -865,11 +892,11 @@ local function makeTreeFarm()
 		moveForward(2)
 		turtle.select(slot.bucket2)
 		turtle.placeDown()
-		
+
 		--loop
 		for i = 1, 4 do
-		fillBucket()
-		fillCanal()
+			fillBucket()
+			fillCanal()
 		end
 
 		--finishing
@@ -893,7 +920,7 @@ local function makeTreeFarm()
 		moveDown()
 		placeCobbleDown(8)
 		moveUp()
-		placeCobbleDown(9)	
+		placeCobbleDown(9)
 		turtle.turnLeft()
 		turtle.turnLeft()
 		placeCobbleDown(16)
@@ -947,7 +974,7 @@ local function makeTreeFarm()
 		moveDown()
 		placeCobbleDown(8)
 		moveUp()
-		placeCobbleDown(9)	
+		placeCobbleDown(9)
 		turtle.turnLeft()
 		turtle.turnLeft()
 		placeCobbleDown(16)
@@ -960,9 +987,8 @@ local function makeTreeFarm()
 		moveForward()
 		turtle.turnLeft()
 	end
-	
-	local function placeDirtandTorches(x_num_trees, z_num_trees, special_line)
 
+	local function placeDirtandTorches(x_num_trees, z_num_trees, special_line)
 		local function placedt()
 			turtle.select(slot.dirt)
 			turtle.placeDown()
@@ -988,11 +1014,11 @@ local function makeTreeFarm()
 		turtle.turnRight()
 		moveBack(2)
 
+		placedt()
+		for i = 1, (z_num_trees - 1) do
+			moveBack(2)
 			placedt()
-			for i = 1, (z_num_trees - 1) do
-				moveBack(2)
-				placedt()
-			end
+		end
 
 		for i = 1, x_num_trees - 1 do
 			turtle.turnRight()
@@ -1006,7 +1032,7 @@ local function makeTreeFarm()
 			end
 
 			for j = 1, (z_num_trees - 1) do
-			moveBack(2)
+				moveBack(2)
 				if i == special_line - 1 then
 					placeSpecial()
 				else
@@ -1036,7 +1062,7 @@ local function makeTreeFarm()
 	layFloor(7, 16)
 	digMiddleCanal()
 	layFloor(7, 16)
-	
+
 	moveUp()
 	turtle.turnRight()
 	turtle.turnRight()
@@ -1052,7 +1078,7 @@ local function makeTreeFarm()
 	turtle.turnRight()
 	moveForward(8)
 	turtle.turnRight()
-	
+
 	moveForward(7)
 	moveDown(2)
 	turtle.select(slot.bucket1)
@@ -1119,7 +1145,7 @@ local function makeTreeFarm()
 
 	moveBack(14)
 	turtle.turnLeft()
-	moveDown()	
+	moveDown()
 
 	-- get saplings from sapling chest
 	turtle.turnLeft()
@@ -1140,27 +1166,24 @@ local function makeTreeFarm()
 	end
 end -- end of veery long bulding function
 
-
 -- session persistence main function
 local function restoreSession()
-
 	-- easy position -> over chest or sapling
 	if turtle.detectDown() then
 		local block_under = inspect("down", "name")
 
 		--turtle was waiting in starting position
 		if block_under == game_item.chest then
+			--turtle is on top of sapling, which is ok and can continue safely
 			while inspect("front", "name") ~= game_item.chest do
 				turtle.turnLeft()
 			end
 			if starting_position == "left" then
-				turtle.turnRight() 
+				turtle.turnRight()
 			elseif starting_position == "right" then
 				turtle.turnLeft()
 			end
 			return
-			
-		--turtle is on top of sapling, which is ok and can continue safely
 		elseif block_under == "minecraft:sapling" then
 			return
 		end
@@ -1222,6 +1245,7 @@ local function restoreSession()
 	--we were above dirt block
 	turtle.select(slot.dirt)
 	if turtle.compareDown() then
+		-- if there is torch under turtle
 		moveUp(moves + 1)
 		turtle.select(slot.log)
 		if turtle.compareUp() then
@@ -1242,13 +1266,12 @@ local function restoreSession()
 			plantTree()
 			return
 		end
-	-- if there is torch under turtle
 	elseif inspect("down", "name") == game_item.torch then
 		moveUp()
 		return
 	else
-	-- we are just under water, let get back to working altitude
-		moveUp(working_altitude - 1) 
+		-- we are just under water, let get back to working altitude
+		moveUp(working_altitude - 1)
 		return
 	end
 end
@@ -1287,23 +1310,22 @@ local function farmTreesOnce()
 			end
 
 			turtle.select(slot.log)
-				if turtle.getItemCount() > 1 and not turtle.dropDown(1) then
-					message = "wood_chest_full"
-					return
-				else
-					turtle.suckDown(1)
-				end
+			if turtle.getItemCount() > 1 and not turtle.dropDown(1) then
+				message = "wood_chest_full"
+				return
+			else
+				turtle.suckDown(1)
+			end
 		end
-			farmTrees()
-			unLoad()
-			return true
-	else 
+		farmTrees()
+		unLoad()
+		return true
+	else
 		return false
 	end
 end
 
 local function runMenu()
-
 	local function checkStartup()
 		if fs.exists("startup") then
 			return "Delete startup file"
@@ -1326,8 +1348,8 @@ local function runMenu()
 
 	local menu = {
 		["main"] = {
-			options =   {"Harvest trees just once", "Start harvesting loop", 	"Build tree farm", 	startup, 		"Quit"},
-			job =       {farmTreesOnce, 			startLumberjacking, 		makeTreeFarm, 		modifyStartup, 	"quit"}
+			options = {"Harvest trees just once", "Start harvesting loop", "Build tree farm", startup, "Quit"},
+			job = {farmTreesOnce, startLumberjacking, makeTreeFarm, modifyStartup, "quit"}
 		}
 	}
 
@@ -1361,8 +1383,8 @@ local function runMenu()
 		--this is only to update startup entry, probably should use menu["main"].options[3] = startup
 		local menu = {
 			["main"] = {
-				options =   {"Harvest trees just once", "Start harvesting loop", 	"Build tree farm", 	startup, 		"Quit"},
-				job =       {farmTreesOnce, 			startLumberjacking, 		makeTreeFarm, 		modifyStartup, 	"quit"}
+				options = {"Harvest trees just once", "Start harvesting loop", "Build tree farm", startup, "Quit"},
+				job = {farmTreesOnce, startLumberjacking, makeTreeFarm, modifyStartup, "quit"}
 			}
 		}
 
@@ -1372,7 +1394,7 @@ local function runMenu()
 
 		for i = 1, #menu[menustate].options do
 			if i == selected then
-				printCentered("[ "..menu[menustate].options[i].." ]", term_height / 2 - #menu[menustate].options + i * 2)
+				printCentered("[ " .. menu[menustate].options[i] .. " ]", term_height / 2 - #menu[menustate].options + i * 2)
 			else
 				printCentered(menu[menustate].options[i], term_height / 2 - #menu[menustate].options + i * 2)
 			end
@@ -1397,8 +1419,8 @@ local function runMenu()
 				menustate = menu[menustate].job[selected]
 				selected = 1
 			end
-			
-			if menustate == "quit" then 
+
+			if menustate == "quit" then
 				term.clear()
 				term.setCursorPos(1, 1)
 				return
@@ -1412,8 +1434,8 @@ if turtle.craft == nil then
 end
 
 if args[1] == "update" then
-  update()
-  return
+	update()
+	return
 elseif args[1] == "left" or args[1] == "right" then
 	starting_position = args[1]
 elseif args[1] == "help" then
@@ -1441,10 +1463,8 @@ if args[3] then
 	wait_for_saplings = args[3]
 end
 
-
 if args[4] then
 	if args[4] == "skipmenu" then
-
 		if not cancelTimer(sleep_on_startup, "Countdown to start") then
 			startLumberjacking()
 		end
@@ -1452,7 +1472,6 @@ if args[4] then
 end
 
 runMenu()
-
 
 -- notes, ToDo
 -- in czech :-P
