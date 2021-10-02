@@ -961,4 +961,15 @@ if args[1] == "loop" then
 	end
 end
 
+-- check for item name in inventory
+local function checkItemName(slot)
+	if slot == nil then slot = turtle.getSelectedSlot() end
+	item = turtle.getItemDetail(slot)
+	if item then
+		return item.name
+	else
+		return false
+	end
+end
+
 runMenu()
