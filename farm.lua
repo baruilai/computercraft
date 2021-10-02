@@ -643,7 +643,7 @@ local function checkItemName(slot)
 	end
 end
 
-local function checkSlot(slot)
+local function checkSlot(slot, inventory_table)
 	if inventory_table.quantity[slot] == nil then
 		return true
 	elseif turtle.getItemCount(slot) < inventory_table.quantity[slot] then
@@ -681,7 +681,7 @@ local function checkInventory(inventory_table)
 		term.write("Slot")
 
 		for i = 1, 16 do
-			if not checkSlot(i) then
+			if not checkSlot(i, inventory_table) then
 				term.setCursorPos(2, lines + 5)
 				term.write(inventory_table.quantity[i])
 
