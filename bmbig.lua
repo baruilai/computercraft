@@ -7,8 +7,8 @@
 
 local slot = {
 	sapling = 1,
-	log = 2,
-	podzol = 3,
+	podzol = 2,
+	log = 3,
 	bonemeal = 4
 }
 
@@ -19,15 +19,19 @@ local gameItem = {
 	water = "minecraft:water"
 }
 
-local minimum_trees = 5
-local minimum_aquired_saplings = 6
-local last_bonemeal = 9
-local maximum_waiting_time = 12 --x10 seconds, ie. 12 = 120seconds
+local peripheral = {
+	workbench = "workbench"
+}
 
-local minimum_required_saplings = 10
-local minimum_fuel = 100
-local optimum_fuel = 2000
-local countdown = 5
+local consecutiveTrees = 2
+local minimumSaplingYield = consecutiveTrees * 4 + 1
+local waitForSaplingsInSeconds = 120
+
+local minimumSaplings = 5
+local minimumFuel = 100
+local optimumFuel = 2000
+local countdown = 3
+local maximumTreeHeight = 31
 
 local function moveForward(distance)
 	if distance == nil then
@@ -108,6 +112,8 @@ local function frontBlockIs(block)
 	if data.name == block or data[block] then
 		return true
 	end
+
+	return false
 end
 
 local function bottomBlockIs(block)
@@ -119,6 +125,8 @@ local function bottomBlockIs(block)
 	if data.name == block or data[block] then
 		return true
 	end
+
+	return false
 end
 
 local function topBlockIs(block)
@@ -130,6 +138,8 @@ local function topBlockIs(block)
 	if data.name == block or data[block] then
 		return true
 	end
+
+	return false
 end
 
 local function requestAssistance(problem)
@@ -137,7 +147,7 @@ local function requestAssistance(problem)
 	print("press enter to continue")
 
 	while true do
-		event, key = os.pullEvent("key")
+		local event, key = os.pullEvent("key")
 
 		if key == keys.enter then
 			term.clear()
@@ -152,362 +162,459 @@ local function requestAssistance(problem)
 end
 
 local function plantSaplings()
-	turtle.select(sapling_slot)
+	turtle.select(slot.log)
 	if turtle.compare() then
 		return
 	end
 
-	moveUp()
+	turtle.select(slot.sapling)
+	if turtle.compare() then
+		return
+	end
+
+	-- distant left corner
 	moveForward()
-	turtle.placeDown()
 	turtle.turnLeft()
 	moveForward()
-	turtle.placeDown()
-	for index = 1, 3, 1 do
-		turtle.placeDown()
+	turtle.turnRight()
+	turtle.place()
+
+	-- close left corner
+	turtle.turnLeft()
+	moveBack()
+	turtle.place()
+
+	-- distant right corner
+	turtle.turnRight()
+	turtle.place()
+
+	-- close right corner
+	moveBack()
+	turtle.place()
+end
+
+local function unloadLogs()
+	turtle.select(slot.log)
+	for i = slot.bonemeal, 16 do
+		if turtle.compareTo(i) then
+			turtle.select(i)
+			if not turtle.dropDown() then
+				requestAssistance("Chest for wood is full")
+			end
+			turtle.select(slot.log)
+		end
+	end
+end
+
+local function unloadRest()
+	turtle.turnLeft()
+	for i = slot.bonemeal + 1, 16 do
+		turtle.select(i)
+		if turtle.getItemCount() > 0 and not turtle.drop() then
+			requestAssistance("Chest for saplings is full")
+		end
+	end
+	turtle.turnRight()
+end
+
+local function refuel()
+	if turtle.getFuelLevel() > optimumFuel or turtle.getItemCount(slot.log) <= 17 then
+		return
+	end
+
+	if (peripheral.getType("left") ~= peripheral.workbench and peripheral.getType("right") ~= peripheral.workbench) then
+		turtle.turnLeft()
+
+		for i = 1, 3 do
+			turtle.suck()
+		end
+
+		turtle.select(slot.sapling)
+		turtle.drop()
+		turtle.select(slot.podzol)
+		turtle.drop()
+		turtle.select(slot.bonemeal)
+		turtle.drop()
+		turtle.craft(16)
+		turtle.select(slot.log + 1)
+		turtle.refuel(64)
+		turtle.select(slot.sapling)
+		turtle.suck()
+		turtle.select(slot.podzol)
+		turtle.suck()
+		turtle.select(slot.bonemeal)
+		turtle.suck()
 		turtle.turnRight()
+
+		print("Fuel level: " .. turtle.getFuelLevel())
+	elseif turtle.getFuelLevel() < minimumFuel then
+		requestAssistance("We are run out of fuel")
+	end
+end
+
+local function getBonemeal()
+	turtle.select(slot.bonemeal)
+	local bonemealCount = turtle.getItemSpace(slot.bonemeal)
+	turtle.suckUp(bonemealCount)
+
+	if turtle.getItemCount() <= 1 then
+		requestAssistance("We are run out of bonemeal")
+	end
+end
+
+local function goToChestPosition()
+	moveForward()
+	turtle.turnLeft()
+	turtle.turnLeft()
+	moveForward()
+	moveDown()
+	while not bottomBlockIs(gameItem.chest) do
 		moveForward()
 	end
 	turtle.turnRight()
 	turtle.turnRight()
-	moveBack()
-	moveDown()
 end
 
-local function goToChestPosition()
-	while not bottomBlockIs(gameItem.chest) do
-		moveBack()
-	end
-end
-
-local function unLoad()
-	goToChestPosition()
-
-	--unload wood
-	turtle.turnLeft()
-	turtle.select(wood_slot)
-	for i = bonemeal_slot, 16 do
-		if turtle.compareTo(i) then
-			turtle.select(i)
-			if not turtle.drop() then
-				requestAssistance("Chest for wood is full")
-			end
-			turtle.select(wood_slot)
-		end
-	end
-
-	--unload saplings
-	turtle.turnLeft()
-	turtle.select(sapling_slot)
-	for i = bonemeal_slot, 16 do
-		if turtle.compareTo(i) then
-			turtle.select(i)
-			if not turtle.drop() then
-				requestAssistance("Chest for saplings is full")
-			end
-			turtle.select(sapling_slot)
-		end
-	end
-
-	--refuel if needed
-	if turtle.getFuelLevel() < optimum_fuel and turtle.getItemCount(wood_slot) > 16 then
-		if (peripheral.getType("left") == "workbench" or peripheral.getType("right") == "workbench") then
-			turtle.turnLeft()
-			turtle.turnLeft()
-			turtle.select(sapling_slot)
-			turtle.drop()
-			turtle.select(dirt_slot)
-			turtle.drop()
-			turtle.craft()
-			turtle.refuel(64)
-			turtle.select(sapling_slot)
-			turtle.suck()
-			turtle.select(dirt_slot)
-			turtle.suck()
-			turtle.turnLeft()
-			turtle.turnLeft()
-		elseif turtle.getFuelLevel() < minimum_fuel then
-			requestAssistance("We are run out of fuel")
-		end
-	end
-
-	--get bonemeal
-	turtle.turnLeft()
-	for i = bonemeal_slot, 16 do
-		turtle.select(i)
-		while turtle.getItemCount(i) < 64 and turtle.getItemCount(last_bonemeal) == 0 do
-			if not turtle.suck() then
-				if turtle.getItemCount(bonemeal_slot) > 0 then
-					break
-				else
-					requestAssistance("We are run out of bonemeal")
-				end
-			end
-		end
-	end
-	bonemeal_now = bonemeal_slot
-
-	turtle.turnLeft()
+local function goToOperationPosition()
 	moveForward(4)
-	moveUp(2)
+	moveUp()
+end
+
+local function restock()
+	goToChestPosition()
+	unloadLogs()
+	unloadRest()
+	refuel()
+	getBonemeal()
+	goToOperationPosition()
 end
 
 local function useBonemeal()
-	turtle.select(bonemeal_now)
-	local i = bonemeal_now
-	while turtle.getItemCount(bonemeal_now) == 0 and i < 16 do
-		bonemeal_now = bonemeal_now + 1
-		i = i + 1
-	end
-	turtle.select(bonemeal_now)
+	turtle.select(slot.bonemeal)
 
-	local used_bonemeal = turtle.place()
-
-	if not used_bonemeal then
-		if bonemeal_now == 16 then
-			unLoad()
-		elseif bonemeal_now < 16 then
-			bonemeal_now = bonemeal_now + 1
-			turtle.select(bonemeal_now)
+	while turtle.place() do
+		if turtle.getItemCount(slot.bonemeal) <= 1 then
+			restock()
 		end
+
+		turtle.select(slot.log)
+		if turtle.compare() then
+			return
+		end
+
+		turtle.select(slot.bonemeal)
 	end
 end
 
 local function makeTree()
-	plantSaplings()
-	turtle.select(wood_slot)
-
-	while not turtle.compare() do
-		useBonemeal()
-		turtle.select(wood_slot)
+	turtle.select(slot.log)
+	if turtle.compare() then
+		return
 	end
+
+	plantSaplings()
+	useBonemeal()
+end
+
+local function cutTreeFromBelow()
+	turtle.select(slot.log)
+	while turtle.compareUp() or turtle.compare() do
+		turtle.dig()
+		moveUp()
+	end
+end
+
+local function cutTreeFromAbove()
+	turtle.select(slot.podzol)
+	while not turtle.compareDown(slot.podzol) do
+		turtle.dig()
+		moveDown()
+	end
+	turtle.dig()
 end
 
 local function harvestTree()
-	local trunk = 0
+	moveForward()
 
-	turtle.select(wood_slot)
+	cutTreeFromBelow()
 
-	while turtle.compareUp() do
-		moveUp()
-		trunk = trunk + 1
+	turtle.turnLeft()
+	moveForward()
+	turtle.turnRight()
 
-		turtle.select(sapling_slot)
-		turtle.dig()
-		turtle.select(wood_slot)
-	end
+	cutTreeFromAbove()
 
-	moveDown(trunk)
+	turtle.turnLeft()
+	moveBack()
+	turtle.turnRight()
+	moveBack()
 end
 
 local function getSaplings()
-	local saplings_before = turtle.getItemCount(sapling_slot)
-	local saplings_after = saplings_before + minimum_aquired_saplings
+	local saplings_before = turtle.getItemCount(slot.sapling)
+	local targetSaplingCount = saplings_before + minimumSaplingYield
 
 	moveDown(2)
 	moveForward()
 
-	turtle.select(sapling_slot)
-
-	local i = 1
-	while turtle.getItemCount(sapling_slot) < saplings_after and i < maximum_waiting_time and
-		turtle.getItemCount(sapling_slot) ~= 64 do
-		if turtle.suckDown() then
-			print(turtle.getItemCount(sapling_slot) - saplings_before)
+	turtle.select(slot.sapling)
+	for i = slot.bonemeal + 1, 16 do
+		if turtle.compareTo(i) then
+			turtle.select(i)
+			turtle.transferTo(slot.sapling)
+			turtle.select(slot.sapling)
 		end
-		sleep(10)
-		i = i + 1
-		print((i * 10) .. "sekund")
 	end
+
+	local i = 0
+	while i < waitForSaplingsInSeconds and turtle.getItemCount(slot.sapling) ~= 64 do
+		while turtle.suckDown() do
+		end
+
+		print("Found " .. turtle.getItemCount(slot.sapling) - saplings_before .. " saplings.")
+
+		if turtle.getItemCount(slot.sapling) == 64 or turtle.getItemCount(slot.sapling) > targetSaplingCount then
+			break
+		end
+
+		sleep(10)
+		i = i + 10
+	end
+	print("Waited " .. (i) .. " seconds.")
 
 	moveBack()
 	moveUp(2)
 end
 
 local function farmTrees()
-	while turtle.getItemCount(sapling_slot) > 10 and turtle.getFuelLevel() > minimum_fuel do
-		for i = 1, minimum_trees do
+	while turtle.getItemCount(slot.sapling) >= minimumSaplings and turtle.getFuelLevel() > minimumFuel do
+		if turtle.getItemCount(16) > 0 or turtle.getFuelLevel() < optimumFuel then
+			restock()
+		end
+
+		for i = 1, consecutiveTrees do
 			makeTree()
-			moveForward()
 			harvestTree()
-
-			-- go to next half of the tree
-			turtle.turnLeft()
-			moveForward()
-			turtle.turnRight()
-
-			harvestTree()
-
-			--move back to original position
-			turtle.turnLeft()
-			moveBack()
-			turtle.turnRight()
-			moveBack()
 		end
 
 		getSaplings()
-
-		if turtle.getItemCount(16) > 0 or turtle.getFuelLevel() < minimum_fuel then
-			unLoad()
-		end
 	end
 end
 
--- local function cancelTimer(duration, text)
--- 	timer = os.startTimer(1)
--- 	repeat
--- 		term.clear()
--- 		term.setCursorPos(1, 1)
--- 		print(text)
--- 		print("Press enter to end program.")
--- 		print(duration)
+local function cancelTimer(duration, text)
+	local timer = os.startTimer(1)
+	repeat
+		term.clear()
+		term.setCursorPos(1, 1)
+		print(text)
+		print("Press enter to end program.")
+		print(duration)
 
--- 		local id, p1 = os.pullEvent()
--- 		if id == "key" and p1 == 28 then
--- 			error()
--- 		elseif id == "timer" and p1 == timer then
--- 			duration = duration - 1
--- 			timer = os.startTimer(1)
--- 		end
--- 	until duration < 0
--- 	term.clear()
--- 	term.setCursorPos(1, 1)
--- 	return false
--- end
+		local id, p1 = os.pullEvent()
+		if id == "key" and p1 == 28 then
+			error()
+		elseif id == "timer" and p1 == timer then
+			duration = duration - 1
+			timer = os.startTimer(1)
+		end
+	until duration < 0
+	term.clear()
+	term.setCursorPos(1, 1)
+	return false
+end
 
--- local function restoreSession()
--- 	cancelTimer(countdown, "Turtle will now restore session")
+local function restoreWorkingPosition()
+	if turtle.detectDown() and not bottomBlockIs(gameItem.leaves) then
+		return false
+	end
 
--- 	turtle.select(dirt_slot)
+	turtle.select(slot.sapling)
+	if turtle.compare() then
+		return true
+	end
 
--- 	--in front of dirt block
--- 	if turtle.compare() then
--- 		moveUp()
--- 		return
--- 	end
+	turtle.select(slot.podzol)
+	moveDown()
+	local isInWorkingPosition = turtle.compare()
+	moveUp()
 
--- 	--under dirt block
--- 	if turtle.compareUp() then
--- 		moveBack()
--- 		moveUp(2)
--- 		return
--- 	end
+	if not isInWorkingPosition then
+		return false
+	end
 
--- 	--on top of dirt block
--- 	if turtle.compareDown() then
--- 		turtle.select(wood_slot)
--- 		if turtle.compareUp() then
--- 			harvestTree()
--- 			moveBack()
--- 			return
--- 		else --check if there is partially cut tree
--- 			moveUp()
--- 			if turtle.compareUp() then
--- 				harvestTree()
--- 				moveDown()
--- 				moveBack()
--- 				return
--- 			else
--- 				moveDown()
--- 				moveBack()
--- 				return
--- 			end
--- 		end
--- 	end
+	print("Restoring from working position.")
 
--- 	--turtle is between chests
--- 	if turtle.detectDown() and not turtle.compareDown() then
--- 		while turtle.detect() do
--- 			turtle.turnLeft()
--- 		end
+	return true
+end
 
--- 		while not turtle.compareUp() do
--- 			moveForward()
--- 		end
--- 		moveBack()
--- 		moveUp(2)
--- 		return
--- 	end
+local function restoreRestockPosition()
+	if not bottomBlockIs(gameItem.chest) then
+		return false
+	end
 
--- 	--somewhere in the air
--- 	if not turtle.detectDown() then
--- 		--are we cutting three?
--- 		turtle.select(wood_slot)
--- 		if turtle.compareUp() then
--- 			harvestTree()
--- 			turtle.select(dirt_slot)
--- 			while not turtle.compareDown() do
--- 				moveDown()
--- 			end
--- 			moveBack()
--- 			return
--- 		else --lets check for patrially cut tree
--- 			moveUp()
--- 			if turtle.compareUp() then
--- 				harvestTree()
--- 				turtle.select(dirt_slot)
--- 				while not turtle.compareDown() do
--- 					moveDown()
--- 				end
--- 				moveBack()
--- 				return
--- 			end
--- 			moveDown()
--- 		end
+	while not frontBlockIs(gameItem.chest) do
+		turtle.turnLeft()
+	end
 
--- 		--there is not partially cut tree, let's go down
--- 		turtle.select(dirt_slot)
--- 		while not turtle.detectDown() do
--- 			moveDown()
--- 			--what if we were in the starting possition?
--- 			if turtle.compare() then
--- 				moveUp()
--- 				return
--- 			end
--- 		end
+	turtle.turnRight()
+	goToOperationPosition()
 
--- 		--turtle finished cutting tree
--- 		if turtle.compareDown() then
--- 			moveBack()
--- 			return
--- 		end
+	print("Restoring from restock position.")
+	return true
+end
 
--- 		--turtle was on the way to starting possition
--- 		if turtle.detectDown() and not turtle.compareDown() then
--- 			moveUp()
--- 			while not turtle.compareUp() do
--- 				moveForward()
--- 			end
--- 			moveBack()
--- 			moveUp(2)
--- 			return
--- 		end
--- 	end
--- end
+local function restoreUnderPodzolPosition()
+	turtle.select(slot.podzol)
+	if not turtle.compareUp() then
+		return false
+	end
+
+	moveBack()
+	moveUp(2)
+
+	print("Restoring from under podzol position.")
+	return true
+end
+
+local function restoreOverPodzolPosition()
+	turtle.select(slot.podzol)
+	if not turtle.compareDown() then
+		return false
+	end
+
+	while turtle.detectDown() do
+		moveForward()
+		if (turtle.compareDown()) then
+			moveForward()
+		end
+
+		if not turtle.detectDown() then
+			moveBack()
+			break
+		end
+
+		if bottomBlockIs(gameItem.torch) then
+			moveBack()
+		end
+
+		turtle.turnRight()
+	end
+
+	turtle.turnRight()
+	turtle.turnRight()
+	moveBack()
+
+	return true
+end
+
+local function restoreOverWaterPosition()
+	if turtle.detectDown() or turtle.detectUp() then
+		return false
+	end
+
+	if turtle.detect() and not frontBlockIs(gameItem.leaves) then
+		turtle.select(slot.podzol)
+		if turtle.compare() then
+			moveUp()
+			return true
+		else
+			return false
+		end
+	end
+
+	moveDown()
+
+	if not bottomBlockIs(gameItem.water) then
+		moveUp()
+		return false
+	end
+
+	moveUp()
+	turtle.select(slot.podzol)
+	for i = 1, 3, 1 do
+		if turtle.compare() then
+			break
+		end
+		moveForward()
+	end
+	moveUp()
+
+	print("Restoring from over water position.")
+	return true
+end
+
+local function restoreCuttingTreePosition()
+	turtle.select(slot.podzol)
+
+	while not turtle.compareDown() do
+		moveDown()
+	end
+
+	restoreOverPodzolPosition()
+	moveForward()
+
+	turtle.select(slot.log)
+	for i = 1, maximumTreeHeight, 1 do
+		moveUp()
+		if turtle.compare() or turtle.compareUp() then
+			cutTreeFromBelow()
+			break
+		end
+	end
+
+	turtle.turnLeft()
+	moveForward()
+	turtle.turnRight()
+
+	cutTreeFromAbove()
+	restoreOverPodzolPosition()
+
+	print("Restoring from under tree position.")
+	return true
+end
+
+local function restorePosition()
+	cancelTimer(countdown, "Turtle will now restore session")
+
+	local restoreFunctions = {
+		restoreWorkingPosition,
+		restoreRestockPosition,
+		restoreUnderPodzolPosition,
+		restoreOverPodzolPosition,
+		restoreOverWaterPosition,
+		-- restoreCuttingTreePosition must be last function
+		restoreCuttingTreePosition
+	}
+
+	for index, restoreFunction in ipairs(restoreFunctions) do
+		local restored = restoreFunction()
+		if restored then
+			return
+		end
+	end
+end
 
 local function checkInventory()
 	term.clear()
 	term.setCursorPos(1, 1)
-	while turtle.getItemCount(sapling_slot) < minimum_required_saplings do
+	while turtle.getItemCount(slot.sapling) < minimumSaplings do
 		print("Not enought saplings.")
-		print("Minimum required saplings is " .. minimum_required_saplings)
-		requestAssistance("Please insert saplings into slot number " .. sapling_slot)
+		print("Minimum required saplings is " .. minimumSaplings)
+		requestAssistance("Please insert saplings into slot number " .. slot.sapling)
 	end
-	while turtle.getItemCount(wood_slot) == 0 do
+	while turtle.getItemCount(slot.log) == 0 do
 		print("Turtle has no wood in correct slot")
-		requestAssistance("Please insert some wood of chosen type into slot number " .. wood_slot)
+		requestAssistance("Please insert some wood of chosen type into slot number " .. slot.log)
 	end
-	while turtle.getItemCount(dirt_slot) == 0 do
+	while turtle.getItemCount(slot.podzol) == 0 do
 		print("Turtle has no dirt in correct slot")
-		requestAssistance("Please insert at least one dirt into slot number " .. dirt_slot)
+		requestAssistance("Please insert at least one dirt into slot number " .. slot.podzol)
 	end
 end
 
 checkInventory()
--- restoreSession()
+restorePosition()
 farmTrees()
-getSaplings()
-unLoad()
 
 if turtle.getFuelLevel() < 100 then
 	print("turtle low on fuel")
