@@ -22,12 +22,12 @@ local countdown = 5
 
 local bonemeal_now = bonemeal_slot
 
-local function moveForward(frwd)
-	if frwd == nil then
-		frwd = 1
+local function moveForward(distance)
+	if distance == nil then
+		distance = 1
 	end
 
-	for i = 1, frwd do
+	for i = 1, distance do
 		if turtle.detect() then
 			turtle.dig()
 		end
@@ -40,12 +40,12 @@ local function moveForward(frwd)
 	end
 end
 
-local function moveUp(up)
-	if up == nil then
-		up = 1
+local function moveUp(distance)
+	if distance == nil then
+		distance = 1
 	end
 
-	for i = 1, up do
+	for i = 1, distance do
 		if turtle.detectUp() then
 			turtle.digUp()
 		end
@@ -58,12 +58,12 @@ local function moveUp(up)
 	end
 end
 
-local function moveDown(dwn)
-	if dwn == nil then
-		dwn = 1
+local function moveDown(distance)
+	if distance == nil then
+		distance = 1
 	end
 
-	for i = 1, dwn do
+	for i = 1, distance do
 		if turtle.detectDown() then
 			turtle.digDown()
 		end
@@ -76,12 +76,12 @@ local function moveDown(dwn)
 	end
 end
 
-local function moveBack(bck)
-	if bck == nil then
-		bck = 1
+local function moveBack(distance)
+	if distance == nil then
+		distance = 1
 	end
 
-	for i = 1, bck do
+	for i = 1, distance do
 		while not turtle.back() do
 			turtle.turnLeft()
 			turtle.turnLeft()
@@ -111,9 +111,23 @@ local function requestAssistance(problem)
 	end
 end
 
-local function plantSapling()
+local function plantSaplings()
 	turtle.select(sapling_slot)
-	turtle.place()
+	moveUp()
+	moveForward()
+	turtle.placeDown()
+	turtle.turnLeft()
+	moveForward()
+	turtle.placeDown()
+	for index = 1, 3, 1 do
+		turtle.placeDown()
+		turtle.turnRight()
+		moveForward()
+	end
+	turtle.turnRight()
+	turtle.turnRight()
+	moveBack()
+	moveDown()
 end
 
 local function unLoad()
@@ -212,7 +226,7 @@ local function useBonemeal()
 end
 
 local function makeTree()
-	plantSapling()
+	plantSaplings()
 	turtle.select(wood_slot)
 
 	while not turtle.compare() do
@@ -268,6 +282,13 @@ local function farmTrees()
 			makeTree()
 			moveForward()
 			harvestTree()
+			turtle.turnLeft()
+			moveForward()
+			turtle.turnRight()
+			harvestTree()
+			turtle.turnLeft()
+			moveBack()
+			turtle.turnRight()
 			moveBack()
 		end
 
@@ -279,8 +300,8 @@ local function farmTrees()
 	end
 end
 
-local function cancelTimer(duration, text)
-	local timer = os.startTimer(1)
+function cancelTimer(duration, text)
+	timer = os.startTimer(1)
 	repeat
 		term.clear()
 		term.setCursorPos(1, 1)
