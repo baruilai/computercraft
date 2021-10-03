@@ -5,10 +5,19 @@
 --borovice - trees = 6, saplings = 6 is ok
 --briza - trees = 4, saplings = 5
 
-local sapling_slot = 1
-local wood_slot = 2
-local dirt_slot = 3
-local bonemeal_slot = 4
+local slot = {
+	sapling = 1,
+	log = 2,
+	podzol = 3,
+	bonemeal = 4
+}
+
+local gameItem = {
+	chest = "minecraft:chest",
+	leaves = "minecraft:leaves",
+	torch = "minecraft:wall_torch",
+	water = "minecraft:water"
+}
 
 local minimum_trees = 5
 local minimum_aquired_saplings = 6
@@ -19,8 +28,6 @@ local minimum_required_saplings = 10
 local minimum_fuel = 100
 local optimum_fuel = 2000
 local countdown = 5
-
-local bonemeal_now = bonemeal_slot
 
 local function moveForward(distance)
 	if distance == nil then
@@ -92,6 +99,39 @@ local function moveBack(distance)
 	end
 end
 
+local function frontBlockIs(block)
+	local has_block, data = turtle.inspect()
+	if not has_block then
+		return false
+	end
+
+	if data.name == block or data[block] then
+		return true
+	end
+end
+
+local function bottomBlockIs(block)
+	local has_block, data = turtle.inspectDown()
+	if not has_block then
+		return false
+	end
+
+	if data.name == block or data[block] then
+		return true
+	end
+end
+
+local function topBlockIs(block)
+	local has_block, data = turtle.inspectUp()
+	if not has_block then
+		return false
+	end
+
+	if data.name == block or data[block] then
+		return true
+	end
+end
+
 local function requestAssistance(problem)
 	print(problem)
 	print("press enter to continue")
@@ -113,6 +153,10 @@ end
 
 local function plantSaplings()
 	turtle.select(sapling_slot)
+	if turtle.compare() then
+		return
+	end
+
 	moveUp()
 	moveForward()
 	turtle.placeDown()
@@ -130,10 +174,14 @@ local function plantSaplings()
 	moveDown()
 end
 
+local function goToChestPosition()
+	while not bottomBlockIs(gameItem.chest) do
+		moveBack()
+	end
+end
+
 local function unLoad()
-	--go to chests position
-	moveDown(2)
-	moveBack(4)
+	goToChestPosition()
 
 	--unload wood
 	turtle.turnLeft()
@@ -282,10 +330,15 @@ local function farmTrees()
 			makeTree()
 			moveForward()
 			harvestTree()
+
+			-- go to next half of the tree
 			turtle.turnLeft()
 			moveForward()
 			turtle.turnRight()
+
 			harvestTree()
+
+			--move back to original position
 			turtle.turnLeft()
 			moveBack()
 			turtle.turnRight()
@@ -300,137 +353,137 @@ local function farmTrees()
 	end
 end
 
-function cancelTimer(duration, text)
-	timer = os.startTimer(1)
-	repeat
-		term.clear()
-		term.setCursorPos(1, 1)
-		print(text)
-		print("Press enter to end program.")
-		print(duration)
+-- local function cancelTimer(duration, text)
+-- 	timer = os.startTimer(1)
+-- 	repeat
+-- 		term.clear()
+-- 		term.setCursorPos(1, 1)
+-- 		print(text)
+-- 		print("Press enter to end program.")
+-- 		print(duration)
 
-		local id, p1 = os.pullEvent()
-		if id == "key" and p1 == 28 then
-			error()
-		elseif id == "timer" and p1 == timer then
-			duration = duration - 1
-			timer = os.startTimer(1)
-		end
-	until duration < 0
-	term.clear()
-	term.setCursorPos(1, 1)
-	return false
-end
+-- 		local id, p1 = os.pullEvent()
+-- 		if id == "key" and p1 == 28 then
+-- 			error()
+-- 		elseif id == "timer" and p1 == timer then
+-- 			duration = duration - 1
+-- 			timer = os.startTimer(1)
+-- 		end
+-- 	until duration < 0
+-- 	term.clear()
+-- 	term.setCursorPos(1, 1)
+-- 	return false
+-- end
 
-local function restoreSession()
-	cancelTimer(countdown, "Turtle will now restore session")
+-- local function restoreSession()
+-- 	cancelTimer(countdown, "Turtle will now restore session")
 
-	turtle.select(dirt_slot)
+-- 	turtle.select(dirt_slot)
 
-	--in front of dirt block
-	if turtle.compare() then
-		moveUp()
-		return
-	end
+-- 	--in front of dirt block
+-- 	if turtle.compare() then
+-- 		moveUp()
+-- 		return
+-- 	end
 
-	--under dirt block
-	if turtle.compareUp() then
-		moveBack()
-		moveUp(2)
-		return
-	end
+-- 	--under dirt block
+-- 	if turtle.compareUp() then
+-- 		moveBack()
+-- 		moveUp(2)
+-- 		return
+-- 	end
 
-	--on top of dirt block
-	if turtle.compareDown() then
-		turtle.select(wood_slot)
-		if turtle.compareUp() then
-			harvestTree()
-			moveBack()
-			return
-		else --check if there is partially cut tree
-			moveUp()
-			if turtle.compareUp() then
-				harvestTree()
-				moveDown()
-				moveBack()
-				return
-			else
-				moveDown()
-				moveBack()
-				return
-			end
-		end
-	end
+-- 	--on top of dirt block
+-- 	if turtle.compareDown() then
+-- 		turtle.select(wood_slot)
+-- 		if turtle.compareUp() then
+-- 			harvestTree()
+-- 			moveBack()
+-- 			return
+-- 		else --check if there is partially cut tree
+-- 			moveUp()
+-- 			if turtle.compareUp() then
+-- 				harvestTree()
+-- 				moveDown()
+-- 				moveBack()
+-- 				return
+-- 			else
+-- 				moveDown()
+-- 				moveBack()
+-- 				return
+-- 			end
+-- 		end
+-- 	end
 
-	--turtle is between chests
-	if turtle.detectDown() and not turtle.compareDown() then
-		while turtle.detect() do
-			turtle.turnLeft()
-		end
+-- 	--turtle is between chests
+-- 	if turtle.detectDown() and not turtle.compareDown() then
+-- 		while turtle.detect() do
+-- 			turtle.turnLeft()
+-- 		end
 
-		while not turtle.compareUp() do
-			moveForward()
-		end
-		moveBack()
-		moveUp(2)
-		return
-	end
+-- 		while not turtle.compareUp() do
+-- 			moveForward()
+-- 		end
+-- 		moveBack()
+-- 		moveUp(2)
+-- 		return
+-- 	end
 
-	--somewhere in the air
-	if not turtle.detectDown() then
-		--are we cutting three?
-		turtle.select(wood_slot)
-		if turtle.compareUp() then
-			harvestTree()
-			turtle.select(dirt_slot)
-			while not turtle.compareDown() do
-				moveDown()
-			end
-			moveBack()
-			return
-		else --lets check for patrially cut tree
-			moveUp()
-			if turtle.compareUp() then
-				harvestTree()
-				turtle.select(dirt_slot)
-				while not turtle.compareDown() do
-					moveDown()
-				end
-				moveBack()
-				return
-			end
-			moveDown()
-		end
+-- 	--somewhere in the air
+-- 	if not turtle.detectDown() then
+-- 		--are we cutting three?
+-- 		turtle.select(wood_slot)
+-- 		if turtle.compareUp() then
+-- 			harvestTree()
+-- 			turtle.select(dirt_slot)
+-- 			while not turtle.compareDown() do
+-- 				moveDown()
+-- 			end
+-- 			moveBack()
+-- 			return
+-- 		else --lets check for patrially cut tree
+-- 			moveUp()
+-- 			if turtle.compareUp() then
+-- 				harvestTree()
+-- 				turtle.select(dirt_slot)
+-- 				while not turtle.compareDown() do
+-- 					moveDown()
+-- 				end
+-- 				moveBack()
+-- 				return
+-- 			end
+-- 			moveDown()
+-- 		end
 
-		--there is not partially cut tree, let's go down
-		turtle.select(dirt_slot)
-		while not turtle.detectDown() do
-			moveDown()
-			--what if we were in the starting possition?
-			if turtle.compare() then
-				moveUp()
-				return
-			end
-		end
+-- 		--there is not partially cut tree, let's go down
+-- 		turtle.select(dirt_slot)
+-- 		while not turtle.detectDown() do
+-- 			moveDown()
+-- 			--what if we were in the starting possition?
+-- 			if turtle.compare() then
+-- 				moveUp()
+-- 				return
+-- 			end
+-- 		end
 
-		--turtle finished cutting tree
-		if turtle.compareDown() then
-			moveBack()
-			return
-		end
+-- 		--turtle finished cutting tree
+-- 		if turtle.compareDown() then
+-- 			moveBack()
+-- 			return
+-- 		end
 
-		--turtle was on the way to starting possition
-		if turtle.detectDown() and not turtle.compareDown() then
-			moveUp()
-			while not turtle.compareUp() do
-				moveForward()
-			end
-			moveBack()
-			moveUp(2)
-			return
-		end
-	end
-end
+-- 		--turtle was on the way to starting possition
+-- 		if turtle.detectDown() and not turtle.compareDown() then
+-- 			moveUp()
+-- 			while not turtle.compareUp() do
+-- 				moveForward()
+-- 			end
+-- 			moveBack()
+-- 			moveUp(2)
+-- 			return
+-- 		end
+-- 	end
+-- end
 
 local function checkInventory()
 	term.clear()
@@ -451,7 +504,7 @@ local function checkInventory()
 end
 
 checkInventory()
-restoreSession()
+-- restoreSession()
 farmTrees()
 getSaplings()
 unLoad()
