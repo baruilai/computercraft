@@ -263,16 +263,10 @@ local function getBonemeal()
 end
 
 local function goToChestPosition()
-	moveForward()
-	turtle.turnLeft()
-	turtle.turnLeft()
-	moveForward()
 	moveDown()
 	while not bottomBlockIs(gameItem.chest) do
-		moveForward()
+		moveBack()
 	end
-	turtle.turnRight()
-	turtle.turnRight()
 end
 
 local function goToOperationPosition()
@@ -482,27 +476,18 @@ local function restoreOverPodzolPosition()
 		return false
 	end
 
+	moveBack()
 	while turtle.detectDown() do
-		moveForward()
-		if (turtle.compareDown()) then
+		if bottomBlockIs(gameItem.torch) then
 			moveForward()
 		end
 
-		if not turtle.detectDown() then
-			moveBack()
-			break
-		end
-
-		if bottomBlockIs(gameItem.torch) then
-			moveBack()
-		end
-
 		turtle.turnRight()
+		moveBack()
+		if (turtle.compareDown()) then
+			moveBack()
+		end
 	end
-
-	turtle.turnRight()
-	turtle.turnRight()
-	moveBack()
 
 	return true
 end
