@@ -264,9 +264,13 @@ end
 
 local function goToChestPosition()
 	moveDown()
+	turtle.turnLeft()
+	turtle.turnLeft()
 	while not bottomBlockIs(gameItem.chest) do
-		moveBack()
+		moveForward()
 	end
+	turtle.turnRight()
+	turtle.turnRight()
 end
 
 local function goToOperationPosition()
@@ -497,6 +501,13 @@ local function restoreOverWaterPosition()
 		return false
 	end
 
+	if frontBlockIs(gameItem.torch) then
+		turtle.turnRight()
+		moveUp()
+
+		return true
+	end
+
 	if turtle.detect() and not frontBlockIs(gameItem.leaves) then
 		turtle.select(slot.podzol)
 		if turtle.compare() then
@@ -517,14 +528,21 @@ local function restoreOverWaterPosition()
 	moveUp()
 	turtle.select(slot.podzol)
 	for i = 1, 3, 1 do
-		if turtle.compare() then
+		if turtle.compare() or bottomBlockIs(gameItem.chest) then
 			break
 		end
+
 		moveForward()
 	end
-	moveUp()
 
-	print("Restoring from over water position.")
+	if turtle.compare() then
+		moveUp()
+		return true
+	end
+
+	turtle.turnRight()
+	turtle.turnRight()
+	restoreRestockPosition()
 	return true
 end
 
