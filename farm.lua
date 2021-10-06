@@ -394,10 +394,18 @@ end
 local function plant(length)
 	local function getCrop()
 		--dig only full grown crops
-		local cropType = inspect("down", "name")
-		if cropType == game_item.wheat or cropType == game_item.carrot or cropType == game_item.potatoe then
-			--dig only full grown netherwart
-			if inspect("down", "metadata") == 7 then
+		local inspect, data = turtle.inspectDown()
+		local cropType = data.name
+
+		if not inspect then
+			turtle.digDown()
+			turtle.placeDown()
+			selectNextSlot()
+			return
+		end
+
+		if data.name == game_item.potatoe then
+			if data.state ~= nil and data.state.age == 7 then
 				turtle.digDown()
 				turtle.placeDown()
 			end
@@ -412,10 +420,8 @@ local function plant(length)
 			--do nothing
 		elseif cropType == game_item.melon or cropType == game_item.pumpkin then
 			turtle.digDown()
-		else
-			turtle.digDown()
-			turtle.placeDown()
 		end
+
 		selectNextSlot()
 	end
 
