@@ -98,7 +98,8 @@ local game_item = {
 	chest = "minecraft:chest",
 	leaves = "minecraft:leaves",
 	torch = "minecraft:wall_torch",
-	water = "minecraft:water"
+	water = "minecraft:water",
+	sapling = "minecraft:saplings"
 }
 
 local args = {...}
@@ -540,6 +541,7 @@ local function farmTrees()
 
 				if frontBlockIs(game_item.leaves) then
 					turtle.dig()
+					return
 				end
 
 				local steps = 0
@@ -1408,7 +1410,7 @@ local function runMenu()
 			end
 		end
 
-		event, key = os.pullEvent("key")
+		local event, key = os.pullEvent("key")
 
 		if key == keys.down and selected < #menu[menustate].options then
 			selected = selected + 1
