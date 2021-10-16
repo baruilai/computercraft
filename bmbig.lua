@@ -7,16 +7,16 @@
 
 local slot = {
 	sapling = 1,
-	podzol = 2,
-	log = 3,
-	bonemeal = 4
+	log = 2,
+	bonemeal = 3
 }
 
 local gameItem = {
 	chest = "minecraft:chest",
 	leaves = "minecraft:leaves",
 	torch = "minecraft:wall_torch",
-	water = "minecraft:water"
+	water = "minecraft:water",
+	podzol = "minecraft:podzol"
 }
 
 local peripherals = {
@@ -231,16 +231,12 @@ local function refuel()
 
 		turtle.select(slot.sapling)
 		turtle.drop()
-		turtle.select(slot.podzol)
-		turtle.drop()
 		turtle.select(slot.bonemeal)
 		turtle.drop()
 		turtle.craft(16)
 		turtle.select(slot.log + 1)
 		turtle.refuel(64)
 		turtle.select(slot.sapling)
-		turtle.suck()
-		turtle.select(slot.podzol)
 		turtle.suck()
 		turtle.select(slot.bonemeal)
 		turtle.suck()
@@ -325,8 +321,7 @@ local function cutTreeFromBelow()
 end
 
 local function cutTreeFromAbove()
-	turtle.select(slot.podzol)
-	while not turtle.compareDown(slot.podzol) do
+	while not bottomBlockIs(gameItem.podzol) do
 		turtle.dig()
 		moveDown()
 	end
@@ -433,9 +428,8 @@ local function restoreWorkingPosition()
 		return true
 	end
 
-	turtle.select(slot.podzol)
 	moveDown()
-	local isInWorkingPosition = turtle.compare()
+	local isInWorkingPosition = frontBlockIs(gameItem.podzol)
 	moveUp()
 
 	if not isInWorkingPosition then
@@ -464,8 +458,7 @@ local function restoreRestockPosition()
 end
 
 local function restoreUnderPodzolPosition()
-	turtle.select(slot.podzol)
-	if not turtle.compareUp() then
+	if not topBlockIs(gameItem.podzol) then
 		return false
 	end
 
@@ -477,14 +470,13 @@ local function restoreUnderPodzolPosition()
 end
 
 local function restoreOverPodzolPosition()
-	turtle.select(slot.podzol)
-	if not turtle.compareDown() then
+	if not bottomBlockIs(gameItem.podzol) then
 		return false
 	end
 
 	while turtle.detectDown() do
 		moveForward()
-		if (turtle.compareDown()) then
+		if (bottomBlockIs(gameItem.podzol)) then
 			moveForward()
 		end
 
@@ -513,8 +505,7 @@ local function restoreOverWaterPosition()
 	end
 
 	if turtle.detect() and not frontBlockIs(gameItem.leaves) then
-		turtle.select(slot.podzol)
-		if turtle.compare() then
+		if frontBlockIs(gameItem.podzol) then
 			moveUp()
 			return true
 		else
@@ -530,9 +521,8 @@ local function restoreOverWaterPosition()
 	end
 
 	moveUp()
-	turtle.select(slot.podzol)
 	for i = 1, 3, 1 do
-		if turtle.compare() then
+		if frontBlockIs(gameItem.podzol) then
 			break
 		end
 		moveForward()
@@ -544,9 +534,7 @@ local function restoreOverWaterPosition()
 end
 
 local function restoreCuttingTreePosition()
-	turtle.select(slot.podzol)
-
-	while not turtle.compareDown() do
+	while not bottomBlockIs(gameItem.podzol) do
 		moveDown()
 	end
 
@@ -605,10 +593,6 @@ local function checkInventory()
 	while turtle.getItemCount(slot.log) == 0 do
 		print("Turtle has no wood in correct slot")
 		requestAssistance("Please insert some wood of chosen type into slot number " .. slot.log)
-	end
-	while turtle.getItemCount(slot.podzol) == 0 do
-		print("Turtle has no dirt in correct slot")
-		requestAssistance("Please insert at least one dirt into slot number " .. slot.podzol)
 	end
 end
 
