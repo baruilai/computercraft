@@ -19,7 +19,7 @@ local gameItem = {
 	water = "minecraft:water"
 }
 
-local peripheral = {
+local peripherals = {
 	workbench = "workbench"
 }
 
@@ -222,7 +222,7 @@ local function refuel()
 		return
 	end
 
-	if (peripheral.getType("left") ~= peripheral.workbench and peripheral.getType("right") ~= peripheral.workbench) then
+	if (peripheral.getType("left") == peripherals.workbench or peripheral.getType("right") == peripherals.workbench) then
 		turtle.turnLeft()
 
 		for i = 1, 3 do
