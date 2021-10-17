@@ -161,6 +161,18 @@ local function requestAssistance(problem)
 	end
 end
 
+local function drop()
+	if not turtle.drop() then
+		requestAssistance("Chest in front of me is full.")
+	end
+end
+
+local function dropDown()
+	if not turtle.dropDown() then
+		requestAssistance("Chest down is full.")
+	end
+end
+
 local function plantSaplings()
 	turtle.select(slot.log)
 	if turtle.compare() then
@@ -198,9 +210,7 @@ local function unloadLogs()
 	for i = slot.bonemeal, 16 do
 		if turtle.compareTo(i) then
 			turtle.select(i)
-			if not turtle.dropDown() then
-				requestAssistance("Chest for wood is full")
-			end
+			dropDown()
 			turtle.select(slot.log)
 		end
 	end
@@ -225,14 +235,17 @@ local function refuel()
 	if (peripheral.getType("left") == peripherals.workbench or peripheral.getType("right") == peripherals.workbench) then
 		turtle.turnLeft()
 
-		for i = 1, 3 do
-			turtle.suck()
+		turtle.suck()
+		turtle.suck()
+		turtle.select(slot.sapling)
+		drop()
+		turtle.select(slot.bonemeal)
+		drop()
+
+		for i = slot.bonemeal + 1, 16, 1 do
+			drop()
 		end
 
-		turtle.select(slot.sapling)
-		turtle.drop()
-		turtle.select(slot.bonemeal)
-		turtle.drop()
 		turtle.craft(16)
 		turtle.select(slot.log + 1)
 		turtle.refuel(64)
@@ -362,13 +375,13 @@ local function getSaplings()
 	end
 
 	local i = 0
-	while i < waitForSaplingsInSeconds and turtle.getItemCount(slot.sapling) ~= 64 do
+	while i < waitForSaplingsInSeconds and turtle.getItemCount(slot.sapling) < 64 do
 		while turtle.suckDown() do
 		end
 
 		print("Found " .. turtle.getItemCount(slot.sapling) - saplings_before .. " saplings.")
 
-		if turtle.getItemCount(slot.sapling) == 64 or turtle.getItemCount(slot.sapling) > targetSaplingCount then
+		if turtle.getItemCount(slot.sapling) == 64 or turtle.getItemCount(slot.sapling) >= targetSaplingCount then
 			break
 		end
 
