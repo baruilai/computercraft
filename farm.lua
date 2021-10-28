@@ -397,32 +397,38 @@ local function plant(length)
 		local inspect, data = turtle.inspectDown()
 		local cropType = data.name
 
-		if not inspect then
-			turtle.digDown()
-			turtle.placeDown()
-			selectNextSlot()
-			return
-		end
-
 		if data.name == game_item.potatoe then
 			if data.state ~= nil and data.state.age == 7 then
 				turtle.digDown()
 				turtle.placeDown()
+				selectNextSlot()
+				return
 			end
-		elseif cropType == game_item.nether_wart then
+		end
+
+		if cropType == game_item.nether_wart then
 			if inspect("down", "metadata") == 3 then
 				turtle.digDown()
 				turtle.placeDown()
+				selectNextSlot()
+				return
 			end
-		elseif cropType == game_item.reed then
-			turtle.digDown()
-		elseif cropType == game_item.melon_stem or cropType == game_item.pumpkin_stem then
-			--do nothing
-		elseif cropType == game_item.melon or cropType == game_item.pumpkin then
-			turtle.digDown()
 		end
 
-		selectNextSlot()
+		if cropType == game_item.reed then
+			turtle.digDown()
+			return
+		end
+
+		if cropType == game_item.melon_stem or cropType == game_item.pumpkin_stem then
+			--do nothing
+			return
+		end
+
+		if cropType == game_item.melon or cropType == game_item.pumpkin then
+			turtle.digDown()
+			selectNextSlot()
+		end
 	end
 
 	local function seed()
